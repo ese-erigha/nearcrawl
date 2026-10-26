@@ -4,14 +4,6 @@ on:
   push:
     branches:
       - develop
-    paths:
-      - "apps/gateway/**"
-      - "apps/ingestion/**"
-      - "apps/web/**"
-      - "packages/**"
-      - "infra/**"
-      - "scripts/**"
-      - ".github/workflows/deploy-staging.yml"
   workflow_dispatch:
     inputs:
       apply_migrations:
@@ -21,6 +13,19 @@ on:
         default: true
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    name: Lint, typecheck, test, and build
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm turbo run lint typecheck test build
+
   detect-changes:
     runs-on: ubuntu-latest
     name: Detect changes
@@ -84,7 +89,7 @@ jobs:
   migrate:
     runs-on: ubuntu-latest
     name: Apply database migrations
-    needs: [detect-changes]
+    needs: [test, detect-changes]
     if: needs.detect-changes.outputs.migrations == 'true'
     steps:
       - name: Checkout code
@@ -115,12 +120,17 @@ jobs:
   summary:
     runs-on: ubuntu-latest
     name: Staging summary
-    needs: [detect-changes, migrate]
+    needs: [test, detect-changes, migrate]
     if: always()
     steps:
       - name: Workflow summary
         run: |
           echo "## Staging summary"
+          if [ "${{ needs.test.result }}" != "success" ]; then
+            echo "- Checks: FAILED"
+            exit 1
+          fi
+          echo "- Checks: SUCCESS"
           echo "- Migrations requested: ${{ needs.detect-changes.outputs.migrations }}"
           echo "- Gateway changes: ${{ needs.detect-changes.outputs.gateway }}"
           echo "- Ingestion changes: ${{ needs.detect-changes.outputs.ingestion }}"

@@ -12,7 +12,8 @@
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "db:migrate": "node scripts/check-direct-database-url.mjs && drizzle-kit migrate",
-    "db:new": "drizzle-kit generate --custom --name"
+    "db:new": "drizzle-kit generate --custom --name",
+    "prepare": "git config core.hooksPath .githooks"
   },
   "devDependencies": {
     "drizzle-kit": "^0.31.8",

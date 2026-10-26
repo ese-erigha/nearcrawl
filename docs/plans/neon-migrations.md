@@ -68,19 +68,21 @@ Closetza's `.github/workflows/deploy-staging.yml` is the pattern. A push to `dev
 ```text
 push to develop
       │
-      ▼
-detect-changes
-      │
-      ▼
-migrate                  if a file in infra/migrations/*.sql changed
-      │
-      ├── deploy-gateway     needs migrate
-      ├── deploy-ingestion   needs migrate
-      └── deploy-web         needs migrate
-      │
-      ▼
-summary                  fails the workflow if migrate failed
+      ├── test                 lint, typecheck, test, build
+      └── detect-changes
+            │
+            ▼
+      migrate                  needs test. Runs when a SQL file changed.
+            │
+            ├── deploy-gateway     needs migrate
+            ├── deploy-ingestion   needs migrate
+            └── deploy-web         needs migrate
+            │
+            ▼
+      summary                  fails the workflow if test or migrate failed
 ```
+
+A failed test skips the migrate job. One workflow file handles `develop`. There is no pull-request workflow and no `main` workflow.
 
 Trigger:
 
@@ -89,13 +91,6 @@ on:
   push:
     branches:
       - develop
-    paths:
-      - "apps/gateway/**"
-      - "apps/ingestion/**"
-      - "apps/web/**"
-      - "packages/**"
-      - "infra/**"
-      - ".github/workflows/deploy-staging.yml"
   workflow_dispatch:
     inputs:
       apply_migrations:
@@ -106,7 +101,7 @@ on:
 
 `detect-changes` sets `migrations` to `true` when the push diffs a file matching `infra/migrations/*.sql`. A `workflow_dispatch` sets `migrations` from `apply_migrations`. This is the same check Closetza uses for `infra/d1/migrations`.
 
-`migrate` needs `detect-changes` and runs when `migrations == 'true'`.
+`migrate` needs `test` and `detect-changes`. It runs when `migrations == 'true'`.
 
 1. Checkout, pnpm, Node 24.
 2. `pnpm install --frozen-lockfile`.
@@ -120,7 +115,7 @@ The secret's host must not contain `-pooler`. `drizzle-kit migrate` opens a dire
 
 ## Downstream jobs
 
-Gateway, ingestion, and web do not have a Cloudflare deploy yet. Add each deploy job in this same file when that app gets one. Until then the workflow is `detect-changes` → `migrate` → `summary`.
+Gateway, ingestion, and web do not have a Cloudflare deploy yet. Add each deploy job in this same file when that app gets one. Until then the workflow is `test` and `detect-changes`, then `migrate`, then `summary`.
 
 Each deploy job copies the Closetza gate. `deploy-api-staging` in Closetza `needs` the migrate job and runs only when migrate succeeded or was skipped:
 

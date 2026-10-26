@@ -177,7 +177,7 @@ nearcrawl/
 ├── turbo.json                        # task pipeline for every app
 ├── .github/
 │   └── workflows/
-│       └── eval_and_ci.yml           # tests and evals
+│       └── deploy-staging.yml        # checks, then Neon migrations, on develop
 ├── docs/
 │   └── prd.md
 ├── apps/

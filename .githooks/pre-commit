@@ -1,0 +1,19 @@
+#!/bin/sh
+set -eu
+
+cd "$(git rev-parse --show-toplevel)"
+
+# Git starts this hook with a minimal PATH. nvm is not loaded.
+if ! command -v pnpm >/dev/null 2>&1; then
+  if [ -s "$HOME/.nvm/nvm.sh" ]; then
+    # shellcheck disable=SC1091
+    . "$HOME/.nvm/nvm.sh"
+  fi
+fi
+
+if ! command -v pnpm >/dev/null 2>&1; then
+  echo "pre-commit: pnpm is not on PATH" >&2
+  exit 1
+fi
+
+pnpm turbo run lint typecheck
