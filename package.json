@@ -10,9 +10,12 @@
     "build": "turbo run build",
     "test": "turbo run test",
     "lint": "turbo run lint",
-    "typecheck": "turbo run typecheck"
+    "typecheck": "turbo run typecheck",
+    "db:migrate": "node scripts/check-direct-database-url.mjs && drizzle-kit migrate",
+    "db:new": "drizzle-kit generate --custom --name"
   },
   "devDependencies": {
+    "drizzle-kit": "^0.31.8",
     "turbo": "^2.6.1"
   }
 }
