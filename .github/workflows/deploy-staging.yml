@@ -13,19 +13,6 @@ on:
         default: true
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    name: Lint, typecheck, test, and build
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm turbo run lint typecheck test build
-
   detect-changes:
     runs-on: ubuntu-latest
     name: Detect changes
@@ -85,6 +72,20 @@ jobs:
           else
             echo "web=false" >> $GITHUB_OUTPUT
           fi
+
+  test:
+    runs-on: ubuntu-latest
+    name: Lint, typecheck, test, and build
+    needs: [detect-changes]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm turbo run lint typecheck test build
 
   migrate:
     runs-on: ubuntu-latest
