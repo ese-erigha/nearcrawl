@@ -25,7 +25,7 @@ Spatial news on a globe. One pnpm workspace. Turborepo runs the apps.
 ## Tooling
 
 - **pnpm** + **Turborepo**. Never npm or yarn.
-- `turbo run test` runs the JavaScript tests and the `apps/inference` package scripts.
+- `turbo run test` runs the JavaScript tests and the `apps/inference` package scripts. `test` and `typecheck` depend on `^build`, so `packages/db` is built before the gateway imports `dist`.
 
 ## SQL migration workflow
 
