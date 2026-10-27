@@ -48,7 +48,7 @@ To build a high-performance, cost-optimized spatial intelligence platform across
 ### Epic 1: Spatial 3D Globe & Heatmap Exploration (Phase 1 MVP)
 - **US-1.1:** As a user, I want to view a responsive 3D globe with interactive pins and activity heatmaps so that I can visually identify real-time breaking news clusters globally without typing text queries.
 - **US-1.2:** As a user, I want to click any country, region, or city pin—or draw a spatial bounding box—so that I can filter news strictly to that physical area (`BETWEEN lat1 AND lat2`).
-- **US-1.3:** As a user, I want to filter the map display by primary IPTC news categories (*Finance, Tech, Geopolitics, General*) using APITube's pre-classified taxonomy tags.
+- **US-1.3:** As a user, I want to filter the map by a news category, or by any subcategory under it. The catalog covers APITube's IPTC topics. See [news-categories.md](plans/news-categories.md).
 - **US-1.4:** As a user, I want to click a bookmark icon on any article or brief so that the full article metadata and coordinates are saved to my browser's IndexedDB, allowing me to access my saved items offline and even after the article is purged from the global rolling feed.
 
 ### Epic 2: Multi-Source Spatial RAG & Divergence Briefings (Phase 2)
@@ -89,7 +89,7 @@ PHASE 3: Two-Stage Machine Learning Personalization
 └── apps/inference/recsys — LightGBM Learning-to-Rank (LTR) re-ranking
 
 ### 4.2 Data Storage & Lifecycle Strategy
-- **Active News Feed (Neon PostgreSQL + PostGIS):** Stores incoming APITube news items. Operates on a **rolling 14-day window** where articles older than 14 days are automatically purged via `apps/ingestion` (`DELETE FROM articles WHERE published_at < NOW() - INTERVAL '14 days'`).
+- **Active News Feed (Neon PostgreSQL + PostGIS):** Stores incoming APITube news items. Operates on a rolling window. `apps/ingestion` purges articles older than `FEED_RETENTION_DAYS` in `apps/ingestion/wrangler.toml`.
 - **User Bookmarks & History (Local-First IndexedDB):** Saves complete snapshot copies of bookmarked articles (Title, Summary, Source URL, Coordinates, Tags) inside the client browser. Bookmarks remain permanently accessible even after the original news article is purged from Neon.
 - **Historical Backfill (APITube API):** Deep historical queries beyond 14 days are fetched directly from APITube's API archives on demand rather than stored locally.
 
@@ -161,9 +161,9 @@ nearcrawl/
 - [ ] Set up `apps/web` on Cloudflare Pages for the React + Globe.gl PWA.
 - [ ] Create a Neon project with PostGIS and apply a spatial index on the article coordinates.
 - [ ] Deploy `apps/gateway` for auth, the bounding-box news query, and article reads through the Neon HTTP driver.
-- [ ] Deploy `apps/ingestion` to pull APITube `/v1/news/everything` every 10 minutes into Neon through the same HTTP driver.
+- [ ] Deploy `apps/ingestion` to pull APITube `/v1/news/everything` on `INGESTION_INTERVAL_MINUTES` into Neon through the same HTTP driver.
 - [ ] Implement client-side IndexedDB persistence for offline article bookmarking and reading history.
-- [ ] Build the 14-day purge in `apps/ingestion` (`DELETE FROM articles WHERE published_at < NOW() - INTERVAL '14 days'`).
+- [ ] Build the purge in `apps/ingestion`. Delete articles older than `FEED_RETENTION_DAYS`.
 
 ### Phase 2: RAG Intelligence & Divergence Briefings
 - [ ] Deploy `apps/inference` on a paid Render web service, in the same region as Neon, for LLM orchestration.

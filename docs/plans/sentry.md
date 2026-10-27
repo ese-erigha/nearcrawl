@@ -95,7 +95,7 @@ That copied value is `SENTRY_AUTH_TOKEN`. Store it in the CI secret store. It do
 
 ## What gets sent
 
-Phase 1 instruments `apps/web` and `apps/gateway`. `apps/ingestion` and `apps/inference` get a project when those apps exist.
+The current backend pass instruments `apps/gateway` only. `apps/web` keeps its project and DSN, and the web SDK waits until that app is built. `apps/ingestion` and `apps/inference` get a project when those apps are built.
 
 | Event | Sentry |
 | --- | --- |
@@ -164,6 +164,8 @@ SENTRY_PROJECT=
 `requestId` is `crypto.randomUUID()`, stored on the Hono context the same way Closetza stores it, and copied onto the Sentry scope for that request.
 
 ## Web
+
+This waits. The backend pass does not add `src/instrument.ts` or wrap the React root.
 
 `src/instrument.ts` calls `Sentry.init` when `VITE_SENTRY_DSN` is non-empty. `main.tsx` imports that file first. The React root is wrapped in `Sentry.ErrorBoundary`. A render crash is an error event. The boundary shows a short retry message. It does not send the component tree.
 

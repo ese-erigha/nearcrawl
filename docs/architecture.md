@@ -72,7 +72,7 @@ NearCrawl is architected as a modern, distributed, edge-native web application. 
 ### Tier 4: Background Ingestion (`apps/ingestion`)
 * Technology: Cloudflare Cron Triggers.
 * Responsibilities:
-  - Pulls the APITube API every 10 minutes, stores the articles, and purges the 14-day feed. Writes go through the same Neon HTTP driver as the gateway.
+  - Pulls the APITube API on `INGESTION_INTERVAL_MINUTES`, stores the articles, and purges rows older than `FEED_RETENTION_DAYS`. Both vars are in `apps/ingestion/wrangler.toml`. Writes go through the same Neon HTTP driver as the gateway.
   - Stays off the user request path. The gateway does not ingest.
 
 ### Tier 5: Data Storage Tier
@@ -106,7 +106,7 @@ NearCrawl is architected as a modern, distributed, edge-native web application. 
 ## 5. Database Integration & Connection Patterns
 
 ### A. Connecting `apps/gateway` to Neon (HTTP Serverless Driver)
-Because Cloudflare Workers run in serverless V8 isolates, standard persistent TCP connections can fail. `apps/gateway` and `apps/ingestion` use Neon's HTTP driver. The gateway reads. Ingestion inserts articles and runs the 14-day purge.
+Because Cloudflare Workers run in serverless V8 isolates, standard persistent TCP connections can fail. `apps/gateway` and `apps/ingestion` use Neon's HTTP driver. The gateway reads. Ingestion inserts articles and runs the purge. The window is `FEED_RETENTION_DAYS`.
 
 ```typescript
 import { neon } from '@neondatabase/serverless';

@@ -1,6 +1,7 @@
 export const service = {
   name: 'gateway',
   routes: {
+    categories: '/api/categories',
     spatialNews: '/api/spatial/news',
     article: '/api/articles/:id',
   },

@@ -1,0 +1,12 @@
+# NearCrawl ingestion Worker.
+# Local development stays on Node: `pnpm --filter ingestion dev`.
+# Node reads the vars below from this file. Do not hardcode those numbers in code.
+
+name = "nearcrawl-ingestion"
+main = "src/index.ts"
+compatibility_date = "2026-10-26"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+INGESTION_INTERVAL_MINUTES = "10"
+FEED_RETENTION_DAYS = "14"

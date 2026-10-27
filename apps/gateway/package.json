@@ -4,15 +4,25 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "node --watch src/index.ts",
+    "dev": "node --env-file=../../.env.var --watch src/index.ts",
     "build": "tsc -p tsconfig.build.json",
     "lint": "oxlint",
     "typecheck": "tsc -p tsconfig.json --noEmit --pretty false",
-    "test": "node --test src/service.test.ts"
+    "test": "node --experimental-test-module-mocks --test --test-isolation=process $(find src -name '*.test.ts')"
   },
   "devDependencies": {
     "@types/node": "^24.19.2",
     "oxlint": "^1.88.0",
-    "typescript": "~6.0.3"
+    "typescript": "~6.0.3",
+    "wrangler": "^4.153.0"
+  },
+  "dependencies": {
+    "@hono/node-server": "^2.1.5",
+    "@neon/realtime": "^0.1.2",
+    "@sentry/hono": "^11.9.0",
+    "@sentry/node": "^11.9.0",
+    "db": "workspace:*",
+    "hono": "^4.13.14",
+    "zod": "^4.6.7"
   }
 }

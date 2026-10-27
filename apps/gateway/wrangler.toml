@@ -1,0 +1,19 @@
+# NearCrawl gateway Worker.
+# Local development stays on Node: `pnpm --filter gateway dev`.
+# Node reads the business limits below when those names are absent from the environment.
+# Do not put secrets in this file. Set them with `wrangler secret put`:
+# DATABASE_URL, NEON_REALTIME_SECRET, SENTRY_DSN, NEON_REALTIME_URL.
+
+name = "nearcrawl-gateway"
+main = "src/app.ts"
+compatibility_date = "2026-10-26"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+SENTRY_ENVIRONMENT = "production"
+SPATIAL_NEWS_CAP = "200"
+CATEGORY_ARTICLES_DEFAULT = "20"
+CATEGORY_ARTICLES_CAP = "100"
+
+[observability]
+enabled = true

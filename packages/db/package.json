@@ -15,7 +15,7 @@
     "build": "tsc -p tsconfig.build.json",
     "lint": "oxlint",
     "typecheck": "tsc -p tsconfig.json --noEmit --pretty false",
-    "test": "node --test ../../scripts/check-direct-database-url.test.mjs"
+    "test": "node --test ../../scripts/check-direct-database-url.test.mjs src/categories.catalog.test.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",

@@ -5,6 +5,7 @@ import {
   customType,
   doublePrecision,
   index,
+  integer,
   pgTable,
   text,
   timestamp,
@@ -12,15 +13,13 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core'
 
+import { categories } from './categories.ts'
+
 const geographyPoint = customType<{ data: string }>({
   dataType() {
     return 'geography(Point, 4326)'
   },
 })
-
-export const articleCategories = ['Finance', 'Tech', 'Geopolitics', 'General'] as const
-
-export type ArticleCategory = (typeof articleCategories)[number]
 
 export const articles = pgTable(
   'articles',
@@ -37,7 +36,9 @@ export const articles = pgTable(
     location: geographyPoint('location').generatedAlwaysAs(
       sql`ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)::geography`,
     ),
-    category: text('category').notNull().$type<ArticleCategory>(),
+    categoryId: integer('category_id')
+      .notNull()
+      .references(() => categories.id),
     tags: text('tags').array().notNull().default(sql`'{}'::text[]`),
     publishedAt: timestamp('published_at', { withTimezone: true }).notNull(),
     isBreaking: boolean('is_breaking').notNull().default(false),
@@ -49,12 +50,8 @@ export const articles = pgTable(
     index('articles_location_gix').using('gist', table.location),
     index('articles_lat_lng_idx').on(table.latitude, table.longitude),
     index('articles_published_at_idx').on(table.publishedAt),
-    index('articles_category_published_at_idx').on(table.category, table.publishedAt.desc()),
+    index('articles_category_published_at_idx').on(table.categoryId, table.publishedAt.desc()),
     check('articles_latitude_check', sql`${table.latitude} BETWEEN -90 AND 90`),
     check('articles_longitude_check', sql`${table.longitude} BETWEEN -180 AND 180`),
-    check(
-      'articles_category_check',
-      sql`${table.category} IN ('Finance', 'Tech', 'Geopolitics', 'General')`,
-    ),
   ],
 )

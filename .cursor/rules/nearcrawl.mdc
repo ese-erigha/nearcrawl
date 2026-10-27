@@ -1,0 +1,106 @@
+---
+description: NearCrawl monorepo — pnpm/turbo, Neon SQL workflow, REST endpoints, Hono controllers, KISS and DRY, env and deploy policy
+alwaysApply: true
+---
+
+# NearCrawl (monorepo)
+
+Spatial news on a globe. One pnpm workspace. Turborepo runs the apps.
+
+**Runtimes**
+
+- `apps/web` — React + Vite
+- `apps/gateway` — Hono. Node via `@hono/node-server` until it is a Worker
+- `apps/ingestion` — APITube pull and the 14-day purge
+- `apps/inference` — Python FastAPI. Phase 2
+
+**Docs**
+
+- [docs/architecture.md](docs/architecture.md) — system map. Do not copy that tree into this file.
+- [docs/prd.md](docs/prd.md)
+- [docs/plans/phase-1-gateway.md](docs/plans/phase-1-gateway.md) — gateway routes, schema, Hono layout
+- [docs/plans/neon-migrations.md](docs/plans/neon-migrations.md) — how SQL reaches Neon
+- [docs/plans/sentry.md](docs/plans/sentry.md) — `nearcrawl` org, project DSNs, what gets sent
+
+## Tooling
+
+- **pnpm** + **Turborepo**. Never npm or yarn.
+- `turbo run test` runs the JavaScript tests and the `apps/inference` package scripts.
+
+## SQL migration workflow
+
+Remote DDL is applied by **GitHub Actions** on a push to **`develop`**. Git `main` does not migrate.
+
+1. **Developer** — `pnpm db:new <name>` creates an empty SQL file in `infra/migrations`. Fill in the SQL by hand.
+2. **CI** — `drizzle-kit migrate` uses the GitHub secret `DATABASE_URL` (direct host, no `-pooler`).
+3. **Developer** — Update the Drizzle tables in `packages/db` by hand so they match that SQL.
+4. **Developer** — Application code that reads or writes the new columns.
+
+**Forbidden unless the user explicitly asks in that message:**
+
+- `drizzle-kit generate` without `--custom`
+- `drizzle-kit push`
+- `drizzle-kit migrate` against the remote database
+- Shipping gateway or ingestion code that depends on a column before the SQL is in git and CI has applied it
+
+## Gateway
+
+One controller per route group. The controller parses with Zod, calls one use case, and returns `c.json`. `handleErrors` maps errors. The controller does not touch the database.
+
+A use case calls `getArticleRepository()` or `getLiveQuerySealer()`. It has no Hono types. Phase 1 news routes do not call `getUserId()`.
+
+Only `apps/ingestion` calls APITube. The gateway reads Neon.
+
+Name the repository for the table (`getArticleRepository`, not `getRepo`). A method names one action. Its input lists the columns that action writes. Reads use **Get** (primary key), **Find** (one row by something else), and **List**. Phase 1 reads are `findInBBox` and `findById`. Later writes are `upsertByApitubeId` and one purge method. Do not add `update(article)` that takes the whole row or a partial bag of fields. A private helper may share SQL inside the repository. Callers still see the named action.
+
+## REST
+
+A route is a plural noun. The HTTP method is the action. Phase 1 paths stay the ones in [docs/plans/phase-1-gateway.md](docs/plans/phase-1-gateway.md).
+
+- `GET` reads a collection or one item. Filters such as `bbox` and `category` are query parameters. The id is a path parameter.
+- `POST` creates a resource. An action that is not create, update, or delete is a noun sub-path: `POST /api/articles/:id/live`.
+- `PATCH` changes part of one resource. `DELETE` removes it.
+- `200` for a read, `201` for a create, `400` for validation, `404` for a missing resource, `503` for a missing dependency, `500` for an unexpected failure.
+- JSON fields are camelCase. Errors use one envelope.
+
+```typescript
+// ❌ BAD
+app.get('/api/getSpatialNews', ...)
+
+// ✅ GOOD
+app.get('/api/spatial/news', ...)
+app.post('/api/articles/:id/live', ...)
+```
+
+## Conventions
+
+- **KISS** — write the smallest code that does the requested behavior. Keep a single call site inline. Extract a helper when a second caller needs that same behavior.
+- **DRY** — one Zod schema, one SQL text, and one `as const` object per fact. The bbox rules and the spatial `SELECT` each have one definition, shared by the read and the live seal.
+- **Clean code** — a function does one job. A controller parses and returns JSON. A use case decides. A repository queries. Delete unused code, including a commented-out alternative.
+- **No raw string literals for a closed set.** Define an `as const` object, derive the type with `(typeof OBJ)[keyof typeof OBJ]`, and use the members in comparisons and Zod. Menu category ids live in `CATEGORY`. `categoryCatalog` is the copy for tests and for the gateway when `DATABASE_URL` is absent. Ingestion reads the `categories` table. It does not import `categoryCatalog`.
+- **Business limits** — page caps, the ingest interval, and the feed window live in that app's `wrangler.toml` `[vars]`. Do not hardcode them.
+- **Names state the action.** `getLiveQuerySealer` seals a SQL string. Do not name a function `getRealtime`, `process`, or `handle` when the action has a specific name.
+- **Call inputs** — pass data. The callee calls `fetch`, Neon, or a repository. Do not pass a function so the callee can write a row or replace `fetch`. `handleErrors` may take a function. That wrapper's job is to run it.
+- **Straight-line calls** — one `await` per statement. Name the result, then pass that name.
+- **`apps/web` components** — a screen composes feature components. A second visual piece (header, list, drawer section) gets its own file in the same folder. Name the file for the piece.
+- **Env** — required secrets are validated. No silent fallback for `DATABASE_URL`, `NEON_REALTIME_SECRET`, or `SENTRY_AUTH_TOKEN`. An empty Sentry DSN disables the SDK. Do not commit DSNs or tokens.
+- **Sentry** — report 500s and a missing live query sealer. Do not report a 400 or a 404.
+
+```typescript
+// ❌ BAD
+if (article.categoryId === 6) { ... }
+const rows = await findInBBox(await parseBBox(query.bbox))
+
+// ✅ GOOD
+if (article.categoryId === CATEGORY.FINANCE) { ... }
+const bbox = await parseBBox(query.bbox)
+const rows = await findInBBox(bbox)
+```
+
+## Repo policy
+
+- **Do not commit or push** unless the user asks in that message.
+- **Do not deploy.** The user deploys. Forbidden unless they ask: `wrangler deploy`, a Render deploy, `git push` to trigger a workflow, `neon deploy`.
+- **Do not mutate remote Neon or Sentry.** Forbidden unless they ask: `drizzle-kit migrate`, SQL against the remote database, Sentry project or token changes, writes that use secrets from `.env.var`.
+- Remote read-only checks are fine when the answer needs them. Prefer the code and the docs first.
+- OK without asking: `pnpm dev`, `pnpm build`, `pnpm test`, `pnpm typecheck`, `pnpm lint`.
