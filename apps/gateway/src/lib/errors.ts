@@ -27,7 +27,22 @@ export function handleErrors(handler: (c: AppContext) => Promise<Response>) {
   }
 }
 
+export function reportUnhappyStatus(c: AppContext): void {
+  const status = c.res.status
+  if (status >= 200 && status < 300) return
+  const requestId = c.get('requestId') ?? crypto.randomUUID()
+  const error = c.get('sentryError') ?? new Error(`HTTP ${status}`)
+  reportGatewayError(error, {
+    route: c.req.path,
+    method: c.req.method,
+    requestId,
+    status,
+  })
+}
+
 function mapError(c: AppContext, error: unknown): Response {
+  c.set('sentryError', error)
+
   if (error instanceof ZodError) {
     const details = error.issues.map((issue) => ({
       path: issue.path.join('.'),
@@ -39,10 +54,6 @@ function mapError(c: AppContext, error: unknown): Response {
   if (error instanceof NotFoundError) {
     return c.json({ error: error.message }, 404)
   }
-
-  const requestId = c.get('requestId') ?? crypto.randomUUID()
-  const fields = { route: c.req.path, method: c.req.method, requestId }
-  reportGatewayError(error, fields)
 
   if (error instanceof LiveQuerySealerMissingError) {
     return c.json({ error: error.message }, 503)

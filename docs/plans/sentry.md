@@ -97,16 +97,12 @@ That copied value is `SENTRY_AUTH_TOKEN`. Store it in the CI secret store. It do
 
 The current backend pass instruments `apps/gateway` only. `apps/web` keeps its project and DSN, and the web SDK waits until that app is built. `apps/ingestion` and `apps/inference` get a project when those apps are built.
 
-| Event | Sentry |
-| --- | --- |
-| Unhandled exception, or a 500 from the article repository or the live query sealer | Error event, plus an error log |
-| `LiveQuerySealerMissingError` in production | Error event |
-| Warning from a failed repository call that the handler already turned into a 500 | Error log |
-| Validation failure (400) and unknown article (404) | Nothing. These are expected responses. |
-| Successful `GET /health`, `GET /api/spatial/news`, and `GET /api/articles/:id` | Nothing |
-| Browser console noise, session replay, profiling | Off |
+- A 200 and a 201 send nothing. `GET /health` and a news read that finds no rows stay out of Sentry.
+- A 400 and a 404 send a warning log. They do not open an Issue. A bad query is not a defect.
+- A 500 and a 503 send an error log and an Issue. The Issue holds the stack.
+- Browser console noise, session replay, and profiling stay off.
 
-Logs go through `Sentry.logger`. The gateway does not also print those lines to stdout. A log record includes `route`, `method`, and `requestId`. It does not include `DATABASE_URL`, `NEON_REALTIME_SECRET`, `SENTRY_AUTH_TOKEN`, request headers, or the article body.
+Logs go through `Sentry.logger`. The gateway does not also print those lines to stdout. A log record includes `route`, `method`, `requestId`, and `status`. It does not include `DATABASE_URL`, `NEON_REALTIME_SECRET`, `SENTRY_AUTH_TOKEN`, request headers, or the article body.
 
 Tracing stays on at `tracesSampleRate: 0.05` in production so a slow bounding-box read can be opened from the error. Development sends nothing.
 
@@ -155,13 +151,13 @@ SENTRY_PROJECT=
 
 `app.ts` registers `sentry()` from `@sentry/hono/cloudflare`. The SDK starts when `SENTRY_DSN` is set and `SENTRY_ENVIRONMENT` is `production`.
 
-`handleErrors` in `lib/errors.ts` reports after it maps the throw:
+`handleErrors` in `lib/errors.ts` maps the throw to JSON. After the response is ready, `reportUnhappyStatus` sends every status that is not 2xx.
 
-- `ZodError` and `NotFoundError` return their JSON and do not call Sentry.
-- `LiveQuerySealerMissingError` calls `Sentry.captureException` and `Sentry.logger.error` with `route` and `requestId`, then returns 503.
-- Any other throw calls `Sentry.captureException` and `Sentry.logger.error`, then returns 500 `{ "error": "Internal server error" }`. The client still does not receive the exception message.
+- A 400 and a 404 call `Sentry.logger.warn`. The log record includes `route`, `method`, `requestId`, and `status`.
+- A 500 and a 503 call `Sentry.captureException` and `Sentry.logger.error`. The Issue tags are `requestId` and `status`.
+- A 200 does not call Sentry. The client still receives the JSON body for that status. A 500 body stays `{ "error": "Internal server error" }`.
 
-`requestId` is `crypto.randomUUID()`, stored on the Hono context the same way Closetza stores it, and copied onto the Sentry scope for that request.
+`requestId` is `crypto.randomUUID()`, stored on the Hono context, and copied onto the Sentry scope for that request. Every response sends the same value in the `x-request-id` header.
 
 ## Web
 

@@ -192,7 +192,7 @@ Controllers wrap every handler in `handleErrors`, the same helper Closetza uses.
 | 503 | `{ "error": "Live query sealer is not configured" }` | A live route throws `LiveQuerySealerMissingError`. |
 | 500 | `{ "error": "Internal server error" }` | The article repository or the live query sealer throws anything else. |
 
-`handleErrors` reports 500s and a missing live query sealer to Sentry. The 400 and 404 rows stay out of Sentry. Wiring is in [Sentry on the gateway](#sentry-on-the-gateway).
+`handleErrors` sends a 4xx as a Sentry warning log. It sends a 5xx as a Sentry error log and an Issue. A 200 stays out of Sentry. Wiring is in [Sentry on the gateway](#sentry-on-the-gateway).
 
 ## Repository
 
@@ -392,13 +392,13 @@ The seal functions validate through the same bbox rules, then call `getLiveQuery
 
 Account, projects, and token setup stay in [Sentry](sentry.md). This pass initializes the gateway project only.
 
-`handleErrors` reports after it maps the throw:
+`handleErrors` maps the throw to JSON. `reportUnhappyStatus` then sends every status that is not 2xx.
 
-- `ZodError` and `NotFoundError` return their JSON and do not call Sentry.
-- `LiveQuerySealerMissingError` calls `Sentry.captureException` and `Sentry.logger.error` with `route` and `requestId`, then returns 503.
-- Any other throw calls `Sentry.captureException` and `Sentry.logger.error`, then returns 500 `{ "error": "Internal server error" }`. The client still does not receive the exception message.
+- A 400 and a 404 call `Sentry.logger.warn`. They do not open an Issue.
+- A 500 and a 503 call `Sentry.captureException` and `Sentry.logger.error`.
+- A 200 does not call Sentry. A 500 body stays `{ "error": "Internal server error" }`.
 
-`requestId` is `crypto.randomUUID()`, stored on the Hono context, and copied onto the Sentry scope for that request. A log record includes `route`, `method`, and `requestId`. It does not include `DATABASE_URL`, `NEON_REALTIME_SECRET`, `SENTRY_AUTH_TOKEN`, request headers, or the article body.
+`requestId` is `crypto.randomUUID()`, stored on the Hono context, and copied onto the Sentry scope for that request. Every response sends the same value in the `x-request-id` header. A log record includes `route`, `method`, `requestId`, and `status`. It does not include `DATABASE_URL`, `NEON_REALTIME_SECRET`, `SENTRY_AUTH_TOKEN`, request headers, or the article body.
 
 `SENTRY_AUTH_TOKEN` is a CI secret for source maps. The gateway process does not read it. Local `pnpm dev` leaves `SENTRY_DSN` empty. A temporary `GET /debug-sentry` is how the [Sentry](sentry.md) doc checks ingest, and that route is removed after the issue appears. It is not a Phase 1 endpoint.
 

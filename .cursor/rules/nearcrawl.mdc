@@ -84,7 +84,7 @@ app.post('/api/articles/:id/live', ...)
 - **Straight-line calls** — one `await` per statement. Name the result, then pass that name.
 - **`apps/web` components** — a screen composes feature components. A second visual piece (header, list, drawer section) gets its own file in the same folder. Name the file for the piece.
 - **Env** — required secrets are validated. No silent fallback for `DATABASE_URL`, `NEON_REALTIME_SECRET`, or `SENTRY_AUTH_TOKEN`. An empty Sentry DSN disables the SDK. Do not commit DSNs or tokens.
-- **Sentry** — report 500s and a missing live query sealer. Do not report a 400 or a 404.
+- **Sentry** — a 2xx sends nothing. A 4xx is a warning log. A 5xx is an error log and an Issue.
 
 ```typescript
 // ❌ BAD

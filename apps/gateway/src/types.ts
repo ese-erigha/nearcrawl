@@ -6,6 +6,7 @@ export interface Variables {
   config?: AppConfig
   requestId?: string
   userId?: string
+  sentryError?: unknown
 }
 
 export type ControllerContext = {
