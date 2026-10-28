@@ -114,20 +114,21 @@ No Drizzle generate step. Closetza prints "Skipping Drizzle generation — curat
 
 `drizzle-kit migrate` reads the journal, runs each SQL file not yet listed in the `drizzle.__drizzle_migrations` table, and records it. A second push with no new SQL file skips this job.
 
-The secret's host must not contain `-pooler`. `drizzle-kit migrate` opens a direct Postgres connection. The pooled host is for the apps at runtime, later, under a different name.
+The secret's host must not contain `-pooler`. `drizzle-kit migrate` opens a direct Postgres connection. The pooled host is the Worker secret `DATABASE_URL` in [cloudflare-workers-deploy.md](cloudflare-workers-deploy.md).
 
 ## Downstream jobs
 
-Gateway, ingestion, and web do not have a Cloudflare deploy yet. Add each deploy job in this same file when that app gets one. Until then the workflow is `detect-changes`, then `test`, then `migrate`, then `summary`.
+The gateway job is `deploy-gateway` in `.github/workflows/deploy-staging.yml`. The steps are in [cloudflare-workers-deploy.md](cloudflare-workers-deploy.md). Ingestion and web do not deploy yet.
 
-Each deploy job copies the Closetza gate. `deploy-api-staging` in Closetza `needs` the migrate job and runs only when migrate succeeded or was skipped:
+`deploy-gateway` runs when tests passed, and when migrate succeeded or was skipped:
 
 ```yaml
 deploy-gateway:
-  needs: [detect-changes, migrate]
+  needs: [detect-changes, test, migrate]
   if: |
     always() &&
     needs.detect-changes.outputs.gateway == 'true' &&
+    needs.test.result == 'success' &&
     (needs.migrate.result == 'success' || needs.migrate.result == 'skipped')
 ```
 

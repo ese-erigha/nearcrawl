@@ -1,8 +1,9 @@
 # NearCrawl gateway Worker.
 # Local development stays on Node: `pnpm --filter gateway dev`.
 # Node reads the business limits below when those names are absent from the environment.
-# Do not put secrets in this file. Set them with `wrangler secret put`:
-# DATABASE_URL, NEON_REALTIME_SECRET, SENTRY_DSN, NEON_REALTIME_URL.
+# Do not put secrets in this file.
+# After CI creates this Worker, set DATABASE_URL, NEON_REALTIME_SECRET,
+# NEON_REALTIME_URL, and SENTRY_DSN in the Cloudflare dashboard.
 
 name = "nearcrawl-gateway"
 main = "src/app.ts"

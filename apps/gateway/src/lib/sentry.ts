@@ -1,31 +1,21 @@
-import { captureException, logger, withScope } from '@sentry/node'
-import { init } from '@sentry/hono/node'
+import { captureException, logger, withScope } from '@sentry/hono/cloudflare'
 
 import type { GatewayBindings } from '../config.ts'
 
-let started = false
-
-export function initSentry(env: GatewayBindings = process.env): void {
-  if (started) {
-    return
-  }
-
-  const dsn = env.SENTRY_DSN?.trim() ?? ''
-  if (dsn === '' || env.SENTRY_ENVIRONMENT !== 'production') {
-    return
-  }
-
-  started = true
-  init({
-    dsn,
-    environment: env.SENTRY_ENVIRONMENT,
-    tracesSampleRate: 0.05,
+export function sentryOptions(env: GatewayBindings | undefined) {
+  const dsn = env?.SENTRY_DSN?.trim() ?? ''
+  const enabled = dsn !== '' && env?.SENTRY_ENVIRONMENT === 'production'
+  return {
+    dsn: enabled ? dsn : undefined,
+    enabled,
+    environment: env?.SENTRY_ENVIRONMENT,
+    tracesSampleRate: enabled ? 0.05 : 0,
     dataCollection: {
       userInfo: false,
       httpHeaders: false,
       httpBodies: [],
     },
-  })
+  }
 }
 
 export function reportGatewayError(

@@ -19,8 +19,8 @@
   "dependencies": {
     "@hono/node-server": "^2.1.5",
     "@neon/realtime": "^0.1.2",
+    "@sentry/cloudflare": "11.9.0",
     "@sentry/hono": "^11.9.0",
-    "@sentry/node": "^11.9.0",
     "db": "workspace:*",
     "hono": "^4.13.14",
     "zod": "^4.6.7"

@@ -119,9 +119,9 @@ The organization is `nearcrawl`. Phase 1 creates two projects on the signup team
 | Project | SDK | Platform |
 | --- | --- | --- |
 | `nearcrawl-web` | `@sentry/react` | Browser |
-| `nearcrawl-gateway` | `@sentry/hono` | Node, while `index.ts` listens with `@hono/node-server` |
+| `nearcrawl-gateway` | `@sentry/hono/cloudflare` | Cloudflare Workers |
 
-When the gateway moves to a Worker, that project switches to `@sentry/cloudflare`. The DSN stays the same.
+The DSN stays on the project `nearcrawl-gateway`. The Worker reads it from the `SENTRY_DSN` secret.
 
 ## Credentials
 
@@ -153,7 +153,7 @@ SENTRY_PROJECT=
 
 ## Gateway
 
-`lib/sentry.ts` calls `Sentry.init` when `SENTRY_DSN` is non-empty, before the Hono app is built.
+`app.ts` registers `sentry()` from `@sentry/hono/cloudflare`. The SDK starts when `SENTRY_DSN` is set and `SENTRY_ENVIRONMENT` is `production`.
 
 `handleErrors` in `lib/errors.ts` reports after it maps the throw:
 

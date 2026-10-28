@@ -347,7 +347,7 @@ app.route('/api/articles', articlesController)
 
 `createConfig` reads `DATABASE_URL`, `NEON_REALTIME_URL`, `NEON_REALTIME_SECRET`, `SENTRY_DSN`, and `SENTRY_ENVIRONMENT`. Any of them may be absent. An empty `SENTRY_DSN` disables Sentry. `lib/context.ts` exposes `getConfig()`. It does not expose `getUserId()` yet.
 
-`index.ts` calls `initSentry()` before it builds the app. `lib/sentry.ts` calls `Sentry.init` from `@sentry/hono` only when `SENTRY_DSN` is non-empty. `tracesSampleRate` is `0.05` when `SENTRY_ENVIRONMENT` is `production`, and `0` otherwise. `sendDefaultPii` stays off.
+`app.ts` registers `sentry()` from `@sentry/hono/cloudflare` before the routes. The SDK starts when `SENTRY_DSN` is set and `SENTRY_ENVIRONMENT` is `production`. `tracesSampleRate` is `0.05` in that case, and `0` otherwise. `dataCollection` leaves user info, headers, and bodies off.
 
 `GET /health` returns `{ "status": "ok" }` and does not open a database. Closetza's health route pings its database. That check waits until `DATABASE_URL` is wired.
 

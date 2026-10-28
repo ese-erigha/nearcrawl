@@ -11,6 +11,11 @@ on:
         required: true
         type: boolean
         default: true
+      force_deploy:
+        description: "Deploy the gateway Worker even when gateway files did not change?"
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   detect-changes:
@@ -32,7 +37,11 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
             echo "migrations=${{ inputs.apply_migrations }}" >> $GITHUB_OUTPUT
-            echo "gateway=false" >> $GITHUB_OUTPUT
+            if [ "${{ inputs.force_deploy }}" == "true" ]; then
+              echo "gateway=true" >> $GITHUB_OUTPUT
+            else
+              echo "gateway=false" >> $GITHUB_OUTPUT
+            fi
             echo "ingestion=false" >> $GITHUB_OUTPUT
             echo "web=false" >> $GITHUB_OUTPUT
             exit 0
@@ -55,7 +64,7 @@ jobs:
             echo "No migration files changed — skipping migrations"
           fi
 
-          if git diff --name-only ${{ github.event.before }}..${{ github.sha }} | grep -E '^(apps/gateway/|packages/)'; then
+          if git diff --name-only ${{ github.event.before }}..${{ github.sha }} | grep -E '^(apps/gateway/|packages/|\.github/workflows/deploy-staging\.yml)'; then
             echo "gateway=true" >> $GITHUB_OUTPUT
           else
             echo "gateway=false" >> $GITHUB_OUTPUT
@@ -118,10 +127,37 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: pnpm db:migrate
 
+  deploy-gateway:
+    runs-on: ubuntu-latest
+    name: Deploy gateway
+    needs: [detect-changes, test, migrate]
+    if: |
+      always() &&
+      needs.detect-changes.outputs.gateway == 'true' &&
+      needs.test.result == 'success' &&
+      (needs.migrate.result == 'success' || needs.migrate.result == 'skipped')
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter db build
+      - name: Deploy gateway to Cloudflare Workers
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: apps/gateway
+          wranglerVersion: "4"
+          command: deploy
+
   summary:
     runs-on: ubuntu-latest
     name: Staging summary
-    needs: [test, detect-changes, migrate]
+    needs: [test, detect-changes, migrate, deploy-gateway]
     if: always()
     steps:
       - name: Workflow summary
@@ -148,4 +184,17 @@ jobs:
             fi
           else
             echo "- Database migrations: SKIPPED (no SQL changes)"
+          fi
+
+          if [ "${{ needs.detect-changes.outputs.gateway }}" == "true" ]; then
+            if [ "${{ needs.deploy-gateway.result }}" == "success" ]; then
+              echo "- Gateway deploy: SUCCESS"
+            elif [ "${{ needs.deploy-gateway.result }}" == "skipped" ]; then
+              echo "- Gateway deploy: SKIPPED"
+            else
+              echo "- Gateway deploy: FAILED"
+              exit 1
+            fi
+          else
+            echo "- Gateway deploy: SKIPPED (no gateway changes)"
           fi
