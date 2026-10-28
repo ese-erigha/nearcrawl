@@ -4,6 +4,7 @@
 # Do not put secrets in this file.
 # After CI creates this Worker, set DATABASE_URL, NEON_REALTIME_SECRET,
 # NEON_REALTIME_URL, and SENTRY_DSN in the Cloudflare dashboard.
+# Redeploy after the Cloudflare Actions secret names were corrected.
 
 name = "nearcrawl-gateway"
 main = "src/app.ts"
