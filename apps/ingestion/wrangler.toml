@@ -30,3 +30,6 @@ SENTRY_ENVIRONMENT = "production"
 # 0 0 * * * would delete articles older than FEED_RETENTION_DAYS at 00:00 UTC. That cron is off.
 [triggers]
 crons = ["*/17 * * * *"]
+
+[observability]
+enabled = true
