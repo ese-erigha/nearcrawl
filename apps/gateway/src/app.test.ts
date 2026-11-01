@@ -73,6 +73,11 @@ describe('gateway routes', () => {
     assert.ok(Array.isArray(body.details))
   })
 
+  it('when country is missing, then the hot list returns 400', async () => {
+    const response = await app.request('/api/articles')
+    assert.equal(response.status, 400)
+  })
+
   it('returns article not found for an unknown id', async () => {
     const response = await app.request('/api/articles/00000000-0000-4000-8000-000000000000')
     assert.equal(response.status, 404)

@@ -10,9 +10,15 @@ export type CategoryFilingIndex = {
   chainById: Map<number, readonly number[]>
 }
 
+export type FiledCategoryScore = {
+  categoryId: number
+  score: number | null
+}
+
 export type ResolvedCategories = {
   categoryId: number
   categoryIds: number[]
+  filedCategories: FiledCategoryScore[]
   unknownTopics: number
 }
 
@@ -41,15 +47,28 @@ export function addToCategoryFilingIndex(categoryIndex: CategoryFilingIndex, cat
   categoryIndex.chainById.set(category.id, [category.id, ...(parentChain ?? [])])
 }
 
-export function resolveArticleCategories(categoryIndex: CategoryFilingIndex, medtopIds: readonly string[]): ResolvedCategories {
+export function resolveArticleCategories(
+  categoryIndex: CategoryFilingIndex,
+  medtopIds: readonly string[],
+  scores: ReadonlyMap<string, number | null> = new Map(),
+): ResolvedCategories {
   const matchedIds: number[] = []
   const seen = new Set<number>()
   const unknown = new Set<string>()
+  const scoreById = new Map<number, number | null>()
   for (const medtopId of medtopIds) {
     const category = categoryIndex.byMedtop.get(medtopId)
     if (!category) {
       unknown.add(medtopId)
       continue
+    }
+    const chain = categoryIndex.chainById.get(category.id)
+    if (!chain) {
+      throw new Error(`category ${category.id} has no ancestor chain`)
+    }
+    const score = scores.get(medtopId) ?? null
+    for (const ancestorId of chain) {
+      scoreById.set(ancestorId, higherScore(scoreById.get(ancestorId), score))
     }
     if (seen.has(category.id)) {
       continue
@@ -58,7 +77,12 @@ export function resolveArticleCategories(categoryIndex: CategoryFilingIndex, med
     matchedIds.push(category.id)
   }
   if (matchedIds.length === 0) {
-    return { categoryId: categoryIndex.generalId, categoryIds: [categoryIndex.generalId], unknownTopics: unknown.size }
+    return {
+      categoryId: categoryIndex.generalId,
+      categoryIds: [categoryIndex.generalId],
+      filedCategories: [{ categoryId: categoryIndex.generalId, score: null }],
+      unknownTopics: unknown.size,
+    }
   }
   const categoryIds = new Set<number>()
   const roots: number[] = []
@@ -75,11 +99,23 @@ export function resolveArticleCategories(categoryIndex: CategoryFilingIndex, med
       roots.push(root)
     }
   }
+  const ids = [...categoryIds]
   return {
     categoryId: Math.min(...roots),
-    categoryIds: [...categoryIds],
+    categoryIds: ids,
+    filedCategories: ids.map((categoryId) => ({ categoryId, score: scoreById.get(categoryId) ?? null })),
     unknownTopics: unknown.size,
   }
+}
+
+function higherScore(current: number | null | undefined, next: number | null): number | null {
+  if (current === undefined || current === null) {
+    return next
+  }
+  if (next === null) {
+    return current
+  }
+  return Math.max(current, next)
 }
 
 function rootWithoutMedtop(categories: readonly FilingCategory[]): FilingCategory {

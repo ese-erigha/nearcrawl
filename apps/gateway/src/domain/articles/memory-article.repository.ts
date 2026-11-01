@@ -1,15 +1,22 @@
 import { CATEGORY } from 'db'
 
-import type { ArticleRepository, ArticleRow, SpatialNewsQuery } from './articles.types.ts'
+import type { ArticleRepository, ArticleRow, HotNewsQuery, SpatialNewsQuery } from './articles.types.ts'
 
 const FIXTURE: ArticleRow[] = [
   {
     id: '6b1c0c3e-1f4a-4a0e-9c1d-2a6f0b9e8d11',
     title: 'Port closure',
-    summary: 'Shipping halted overnight.',
+    description: 'Shipping halted overnight.',
     body: 'The port stopped night traffic after the channel was closed.',
+    body_html: null,
+    image_url: null,
+    favicon_url: null,
+    author_name: null,
     source_name: 'Harbor Desk',
     source_url: 'https://example.com/port',
+    source_home_url: null,
+    source_country_name: null,
+    source_country_code: null,
     latitude: 1.3,
     longitude: 103.8,
     category_id: CATEGORY.POLITICS,
@@ -17,6 +24,13 @@ const FIXTURE: ArticleRow[] = [
     tags: ['shipping'],
     published_at: new Date('2026-10-26T12:00:00.000Z'),
     is_breaking: false,
+    is_free: true,
+    is_duplicate: false,
+    share_count: 4,
+    read_time_minutes: 3,
+    words_count: 120,
+    source_rank: null,
+    country_codes: ['SG'],
   },
 ]
 
@@ -45,6 +59,29 @@ export class MemoryArticleRepository implements ArticleRepository {
     const matches = this.rows.filter((row) => filedAs(row, categoryId)).sort(newestFirst)
     return Promise.resolve(matches.slice(0, limit))
   }
+
+  listHotByCountry(query: HotNewsQuery): Promise<ArticleRow[]> {
+    const matches = this.rows.filter((row) => hotMatch(row, query)).sort(hotFirst)
+    return Promise.resolve(matches.slice(0, query.limit))
+  }
+}
+
+function hotMatch(row: ArticleRow, query: HotNewsQuery): boolean {
+  return (
+    !row.is_duplicate &&
+    row.country_codes.includes(query.countryCode) &&
+    row.published_at.getTime() >= query.publishedAfter.getTime()
+  )
+}
+
+function hotFirst(left: ArticleRow, right: ArticleRow): number {
+  if (left.is_breaking !== right.is_breaking) {
+    return left.is_breaking ? -1 : 1
+  }
+  if (left.share_count !== right.share_count) {
+    return right.share_count - left.share_count
+  }
+  return newestFirst(left, right)
 }
 
 function inBox(row: ArticleRow, query: SpatialNewsQuery): boolean {

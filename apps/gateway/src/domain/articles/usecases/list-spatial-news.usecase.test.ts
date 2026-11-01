@@ -8,10 +8,17 @@ import type { ArticleRow } from '../articles.types.ts'
 const row: ArticleRow = {
   id: '6b1c0c3e-1f4a-4a0e-9c1d-2a6f0b9e8d11',
   title: 'Port closure',
-  summary: 'Shipping halted overnight.',
+  description: 'Shipping halted overnight.',
   body: 'The port stopped night traffic after the channel was closed.',
+  body_html: null,
+  image_url: null,
+  favicon_url: null,
+  author_name: null,
   source_name: 'Harbor Desk',
   source_url: 'https://example.com/port',
+  source_home_url: null,
+  source_country_name: null,
+  source_country_code: null,
   latitude: 1.3,
   longitude: 103.8,
   category_id: CATEGORY.POLITICS,
@@ -19,6 +26,13 @@ const row: ArticleRow = {
   tags: ['shipping'],
   published_at: new Date('2026-10-26T12:00:00.000Z'),
   is_breaking: false,
+  is_free: null,
+  is_duplicate: false,
+  share_count: 0,
+  read_time_minutes: null,
+  words_count: null,
+  source_rank: null,
+  country_codes: [],
 }
 
 mock.module('../articles.repository.ts', {
@@ -48,5 +62,14 @@ describe('listSpatialNews', () => {
     assert.equal(response.articles[0]?.sourceName, 'Harbor Desk')
     assert.equal(response.articles[0]?.publishedAt, '2026-10-26T12:00:00.000Z')
     assert.equal('body' in (response.articles[0] ?? {}), false)
+  })
+
+  it('when the spatial read runs, then the card field is description', async () => {
+    const response = await listSpatialNews({
+      bbox: { west: 103, south: 1, east: 104, north: 2 },
+    })
+
+    assert.equal(response.articles[0]?.description, 'Shipping halted overnight.')
+    assert.equal('summary' in (response.articles[0] ?? {}), false)
   })
 })

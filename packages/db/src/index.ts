@@ -3,11 +3,14 @@ export {
   categoryArticlesSql,
   compileSql,
   existingApitubeIdsSql,
+  hotNewsSql,
   purgeArticlesSql,
   spatialNewsSql,
   upsertArticleSql,
   upsertArticlesSql,
   type CompiledSql,
+  type FiledCategoryWrite,
+  type HotNewsStatement,
   type SpatialNewsStatement,
   type UpsertArticle,
 } from './articles.sql.ts'
@@ -24,6 +27,7 @@ export {
   type ArticleRow,
   type BBox,
   type FiledTopic,
+  type HotNewsQuery,
   type SpatialNewsQuery,
 } from './article.repository.ts'
 export {
@@ -36,4 +40,4 @@ export {
 export { createDbClient, type DbClient } from './client.ts'
 export { CATEGORY, categoryCatalog, categoryMenu, isCategoryId, type CategoryRecord, type MenuCategoryId } from './categories.catalog.ts'
 export { sortFiledCategories } from './sort-filed-categories.ts'
-export { articleCategories, articles, categories } from './schema/index.ts'
+export { articleCategories, articleCountries, articles, categories } from './schema/index.ts'

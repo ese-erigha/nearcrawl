@@ -9,15 +9,29 @@ import type { ArticleRow } from './articles.types.ts'
 function row(overrides: Partial<ArticleRow> & Pick<ArticleRow, 'id' | 'latitude' | 'longitude'>): ArticleRow {
   return {
     title: overrides.id,
-    summary: 'Summary',
+    description: 'Summary',
     body: 'Body',
+    body_html: null,
+    image_url: null,
+    favicon_url: null,
+    author_name: null,
     source_name: 'Desk',
     source_url: 'https://example.com',
+    source_home_url: null,
+    source_country_name: null,
+    source_country_code: null,
     category_id: CATEGORY.GENERAL,
     filed: [{ id: CATEGORY.GENERAL, name: 'General' }],
     tags: [],
     published_at: new Date('2026-10-26T12:00:00.000Z'),
     is_breaking: false,
+    is_free: null,
+    is_duplicate: false,
+    share_count: 0,
+    read_time_minutes: null,
+    words_count: null,
+    source_rank: null,
+    country_codes: [],
     ...overrides,
   }
 }
@@ -106,5 +120,54 @@ describe('MemoryArticleRepository', () => {
     assert.equal(result.rows.length, 200)
     assert.equal(result.truncated, true)
     assert.equal(result.rows[0]?.id, 'id-200')
+  })
+
+  it('when the hot country is FR, then a duplicate is excluded and a breaking story comes before a story with more shares', async () => {
+    const repository = new MemoryArticleRepository([
+      row({
+        id: 'duplicate',
+        latitude: 1,
+        longitude: 2,
+        is_duplicate: true,
+        is_breaking: true,
+        share_count: 100,
+        country_codes: ['FR'],
+      }),
+      row({
+        id: 'shares',
+        latitude: 1,
+        longitude: 2,
+        is_breaking: false,
+        share_count: 50,
+        country_codes: ['FR'],
+      }),
+      row({
+        id: 'breaking',
+        latitude: 1,
+        longitude: 2,
+        is_breaking: true,
+        share_count: 1,
+        country_codes: ['FR'],
+      }),
+      row({
+        id: 'united-states',
+        latitude: 1,
+        longitude: 2,
+        is_breaking: true,
+        share_count: 99,
+        country_codes: ['US'],
+      }),
+    ])
+
+    const rows = await repository.listHotByCountry({
+      countryCode: 'FR',
+      publishedAfter: new Date('2026-01-01T00:00:00.000Z'),
+      limit: 20,
+    })
+
+    assert.deepEqual(
+      rows.map((item) => item.id),
+      ['breaking', 'shares'],
+    )
   })
 })

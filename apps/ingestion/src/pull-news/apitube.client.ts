@@ -8,22 +8,37 @@ export type NewsTopic = {
   medtopId: string
   name: string | null
   parentMedtopId: string | null
+  score: number | null
 }
 
 export type NewsItem = {
   apitubeId: string
   title: string
-  summary: string
+  description: string | null
   body: string
+  bodyHtml: string | null
+  imageUrl: string | null
+  faviconUrl: string | null
+  authorName: string | null
   sourceName: string
   sourceUrl: string
+  sourceHomeUrl: string | null
+  sourceCountryName: string | null
+  sourceCountryCode: string | null
   latitude: number | null
   longitude: number | null
+  countryCodes: string[]
   topics: NewsTopic[]
   medtopIds: string[]
   tags: string[]
   publishedAt: Date
   isBreaking: boolean
+  isFree: boolean | null
+  isDuplicate: boolean
+  shareCount: number
+  readTimeMinutes: number | null
+  wordsCount: number | null
+  sourceRank: number | null
   storyId: string | null
 }
 
@@ -84,23 +99,41 @@ export function toNewsItem(value: unknown): NewsItem | null {
   if (!name) {
     return null
   }
-  const summary = summaryText(value, title)
+  const description = text(value.description)
   const point = coordinates(value)
   const topics = newsTopics(value)
+  const source = isRecord(value.source) ? value.source : undefined
+  const sourceLocation = isRecord(source?.location) ? source.location : undefined
+  const rankings = isRecord(source?.rankings) ? source.rankings : undefined
+  const shares = isRecord(value.shares) ? value.shares : undefined
   return {
     apitubeId,
     title,
-    summary,
-    body: text(value.body) ?? summary,
+    description,
+    body: text(value.body) ?? description ?? title,
+    bodyHtml: text(value.body_html),
+    imageUrl: text(value.image),
+    faviconUrl: text(source?.favicon),
+    authorName: authorName(value),
     sourceName: name,
     sourceUrl,
+    sourceHomeUrl: text(source?.home_page_url),
+    sourceCountryName: text(sourceLocation?.country_name),
+    sourceCountryCode: countryCode(sourceLocation?.country_code),
     latitude: point?.latitude ?? null,
     longitude: point?.longitude ?? null,
+    countryCodes: storyCountryCodes(value),
     topics,
     medtopIds: topics.map((topic) => topic.medtopId),
     tags: keywordTags(value),
     publishedAt: published,
     isBreaking: value.is_breaking === true,
+    isFree: flag(value.is_free),
+    isDuplicate: value.is_duplicate === true,
+    shareCount: integer(shares?.total) ?? 0,
+    readTimeMinutes: integer(value.read_time),
+    wordsCount: integer(value.words_count),
+    sourceRank: integer(rankings?.opr),
     storyId: storyId(value.story),
   }
 }
@@ -114,26 +147,6 @@ function newsUrl(page: number, retentionDays: number): URL {
   url.searchParams.set('published_at.start', publishedAfter.toISOString())
   url.searchParams.set('language.code', ARTICLE_LANGUAGE)
   return url
-}
-
-function summaryText(article: Record<string, unknown>, title: string): string {
-  const description = text(article.description)
-  if (description) {
-    return description
-  }
-  if (!Array.isArray(article.summary)) {
-    return title
-  }
-  for (const entry of article.summary) {
-    if (!isRecord(entry)) {
-      continue
-    }
-    const sentence = text(entry.sentence)
-    if (sentence) {
-      return sentence
-    }
-  }
-  return title
 }
 
 function sourceName(article: Record<string, unknown>, href: string): string | null {
@@ -175,7 +188,7 @@ function newsTopics(article: Record<string, unknown>): NewsTopic[] {
       return []
     }
     // The documented category object has no parent. A payload that sends parent as a medtop id is used.
-    return [{ medtopId, name: text(category.name), parentMedtopId: medtopText(category.parent) }]
+    return [{ medtopId, name: text(category.name), parentMedtopId: medtopText(category.parent), score: finite(category.score) }]
   })
 }
 
@@ -186,6 +199,57 @@ function medtopText(value: unknown): string | null {
   }
   const match = raw.match(/medtop:\d+/)
   return match?.[0] ?? null
+}
+
+function storyCountryCodes(article: Record<string, unknown>): string[] {
+  if (!Array.isArray(article.locations_mentioned)) {
+    return []
+  }
+  const codes = new Set<string>()
+  for (const place of article.locations_mentioned) {
+    if (!isRecord(place)) {
+      continue
+    }
+    const code = countryCode(place.country)
+    if (code) {
+      codes.add(code)
+    }
+  }
+  return [...codes]
+}
+
+function countryCode(value: unknown): string | null {
+  const raw = text(value)
+  if (!raw || !/^[A-Za-z]{2}$/.test(raw)) {
+    return null
+  }
+  return raw.toUpperCase()
+}
+
+function authorName(article: Record<string, unknown>): string | null {
+  const author = isRecord(article.author) ? article.author : undefined
+  return text(author?.name)
+}
+
+function integer(value: unknown): number | null {
+  if (typeof value !== 'number' || !Number.isInteger(value)) {
+    return null
+  }
+  return value
+}
+
+function finite(value: unknown): number | null {
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    return null
+  }
+  return value
+}
+
+function flag(value: unknown): boolean | null {
+  if (value === true || value === false) {
+    return value
+  }
+  return null
 }
 
 function keywordTags(article: Record<string, unknown>): string[] {

@@ -15,6 +15,12 @@ const filedCategoriesSql = sql`
   )
 `
 
+const cardColumnsSql = sql`
+  id, title, description, image_url, favicon_url, source_name, source_url,
+  latitude, longitude, category_id, ${filedCategoriesSql} AS filed,
+  tags, published_at, is_breaking, read_time_minutes, is_free, share_count
+`
+
 export type SpatialNewsStatement = {
   west: number
   south: number
@@ -31,9 +37,7 @@ export type CompiledSql = {
 
 export function spatialNewsSql(input: SpatialNewsStatement): SQL {
   return sql`
-    SELECT id, title, summary, source_name, source_url,
-           latitude, longitude, category_id, ${filedCategoriesSql} AS filed,
-           tags, published_at, is_breaking
+    SELECT ${cardColumnsSql}
     FROM articles
     WHERE latitude BETWEEN ${input.south} AND ${input.north}
       AND (
@@ -55,9 +59,7 @@ export function spatialNewsSql(input: SpatialNewsStatement): SQL {
 
 export function categoryArticlesSql(categoryId: number, limit: number): SQL {
   return sql`
-    SELECT id, title, summary, source_name, source_url,
-           latitude, longitude, category_id, ${filedCategoriesSql} AS filed,
-           tags, published_at, is_breaking
+    SELECT ${cardColumnsSql}
     FROM articles
     WHERE EXISTS (
       SELECT 1 FROM article_categories
@@ -71,28 +73,71 @@ export function categoryArticlesSql(categoryId: number, limit: number): SQL {
 
 export function articleByIdSql(id: string): SQL {
   return sql`
-    SELECT id, title, summary, body, source_name, source_url,
-           latitude, longitude, category_id, ${filedCategoriesSql} AS filed,
-           tags, published_at, is_breaking
+    SELECT ${cardColumnsSql},
+           body, body_html, author_name, source_home_url,
+           source_country_name, source_country_code, words_count
     FROM articles
     WHERE id = ${id}
   `
 }
 
+export type HotNewsStatement = {
+  countryCode: string
+  publishedAfter: Date
+  limit: number
+}
+
+export function hotNewsSql(input: HotNewsStatement): SQL {
+  return sql`
+    SELECT articles.id, articles.title, articles.description, articles.image_url, articles.favicon_url,
+           articles.source_name, articles.source_url, articles.latitude, articles.longitude,
+           articles.category_id, ${filedCategoriesSql} AS filed, articles.tags, articles.published_at,
+           articles.is_breaking, articles.read_time_minutes, articles.is_free, articles.share_count,
+           articles.source_rank
+    FROM articles
+    JOIN article_countries ON article_countries.article_id = articles.id
+    WHERE article_countries.country_code = ${input.countryCode}
+      AND articles.published_at >= ${input.publishedAfter}::timestamptz
+      AND articles.is_duplicate = false
+    ORDER BY articles.is_breaking DESC, articles.share_count DESC, articles.published_at DESC
+    LIMIT ${input.limit}
+  `
+}
+
+export type FiledCategoryWrite = {
+  categoryId: number
+  score: number | null
+}
+
 export type UpsertArticle = {
   apitubeId: string
   title: string
-  summary: string
+  description: string | null
   body: string
+  bodyHtml: string | null
+  imageUrl: string | null
+  faviconUrl: string | null
+  authorName: string | null
   sourceName: string
   sourceUrl: string
+  sourceHomeUrl: string | null
+  sourceCountryName: string | null
+  sourceCountryCode: string | null
   latitude: number
   longitude: number
   categoryId: number
   categoryIds: number[]
+  filedCategories: FiledCategoryWrite[]
+  countryCodes: string[]
   tags: string[]
   publishedAt: Date
   isBreaking: boolean
+  isFree: boolean | null
+  isDuplicate: boolean
+  shareCount: number
+  readTimeMinutes: number | null
+  wordsCount: number | null
+  sourceRank: number | null
   storyId: string | null
 }
 
@@ -106,43 +151,62 @@ export function upsertArticlesSql(articles: readonly UpsertArticle[]): SQL {
     throw new Error('upsert requires at least one article')
   }
   for (const article of articles) {
-    if (article.categoryIds.length === 0) {
+    if (article.filedCategories.length === 0) {
       throw new Error('upsert requires at least one category')
     }
   }
   return sql`
     WITH incoming AS (
       SELECT * FROM (VALUES ${articleRows(articles)}) AS v(
-        apitube_id, title, summary, body, source_name, source_url,
-        latitude, longitude, category_id, tags, published_at, is_breaking, story_id
+        apitube_id, title, description, body, body_html, image_url, favicon_url, author_name,
+        source_name, source_url, source_home_url, source_country_name, source_country_code,
+        latitude, longitude, category_id, tags, published_at, is_breaking, is_free, is_duplicate,
+        share_count, read_time_minutes, words_count, source_rank, story_id
       )
     ),
     upserted AS (
       INSERT INTO articles (
-        apitube_id, title, summary, body, source_name, source_url,
-        latitude, longitude, category_id, tags, published_at, is_breaking, story_id
+        apitube_id, title, description, body, body_html, image_url, favicon_url, author_name,
+        source_name, source_url, source_home_url, source_country_name, source_country_code,
+        latitude, longitude, category_id, tags, published_at, is_breaking, is_free, is_duplicate,
+        share_count, read_time_minutes, words_count, source_rank, story_id
       )
       SELECT
-        apitube_id, title, summary, body, source_name, source_url,
-        latitude, longitude, category_id, tags, published_at, is_breaking, story_id
+        apitube_id, title, description, body, body_html, image_url, favicon_url, author_name,
+        source_name, source_url, source_home_url, source_country_name, source_country_code,
+        latitude, longitude, category_id, tags, published_at, is_breaking, is_free, is_duplicate,
+        share_count, read_time_minutes, words_count, source_rank, story_id
       FROM incoming
       ON CONFLICT (apitube_id) DO UPDATE SET
         title = EXCLUDED.title,
-        summary = EXCLUDED.summary,
+        description = EXCLUDED.description,
         body = EXCLUDED.body,
+        body_html = EXCLUDED.body_html,
+        image_url = EXCLUDED.image_url,
+        favicon_url = EXCLUDED.favicon_url,
+        author_name = EXCLUDED.author_name,
         source_name = EXCLUDED.source_name,
         source_url = EXCLUDED.source_url,
+        source_home_url = EXCLUDED.source_home_url,
+        source_country_name = EXCLUDED.source_country_name,
+        source_country_code = EXCLUDED.source_country_code,
         latitude = EXCLUDED.latitude,
         longitude = EXCLUDED.longitude,
         category_id = EXCLUDED.category_id,
         tags = EXCLUDED.tags,
         published_at = EXCLUDED.published_at,
         is_breaking = EXCLUDED.is_breaking,
+        is_free = EXCLUDED.is_free,
+        is_duplicate = EXCLUDED.is_duplicate,
+        share_count = EXCLUDED.share_count,
+        read_time_minutes = EXCLUDED.read_time_minutes,
+        words_count = EXCLUDED.words_count,
+        source_rank = EXCLUDED.source_rank,
         story_id = EXCLUDED.story_id
       RETURNING id, apitube_id
     ),
     filed AS (
-      SELECT * FROM (VALUES ${filedRows(articles)}) AS f(apitube_id, category_id)
+      SELECT * FROM (VALUES ${filedRows(articles)}) AS f(apitube_id, category_id, score)
     ),
     removed AS (
       DELETE FROM article_categories AS ac
@@ -153,12 +217,34 @@ export function upsertArticlesSql(articles: readonly UpsertArticle[]): SQL {
           WHERE f.apitube_id = u.apitube_id
             AND f.category_id = ac.category_id
         )
+    ),
+    scored AS (
+      INSERT INTO article_categories (article_id, category_id, score)
+      SELECT u.id, f.category_id, f.score
+      FROM upserted AS u
+      JOIN filed AS f ON f.apitube_id = u.apitube_id
+      ON CONFLICT (article_id, category_id) DO UPDATE SET score = EXCLUDED.score
+      RETURNING article_id
+    ),
+    countries AS (
+      ${countryRows(articles)}
+    ),
+    removed_countries AS (
+      DELETE FROM article_countries AS ac
+      USING upserted AS u
+      WHERE ac.article_id = u.id
+        AND NOT EXISTS (
+          SELECT 1 FROM countries AS c
+          WHERE c.apitube_id = u.apitube_id
+            AND c.country_code = ac.country_code
+        )
     )
-    INSERT INTO article_categories (article_id, category_id)
-    SELECT u.id, f.category_id
+    INSERT INTO article_countries (article_id, country_code)
+    SELECT u.id, c.country_code
     FROM upserted AS u
-    JOIN filed AS f ON f.apitube_id = u.apitube_id
-    ON CONFLICT (article_id, category_id) DO NOTHING
+    JOIN countries AS c ON c.apitube_id = u.apitube_id
+    WHERE c.country_code IS NOT NULL
+    ON CONFLICT (article_id, country_code) DO NOTHING
   `
 }
 
@@ -194,16 +280,29 @@ function articleRows(articles: readonly UpsertArticle[]): SQL {
       (article) => sql`(
         ${article.apitubeId},
         ${article.title},
-        ${article.summary},
+        ${article.description},
         ${article.body},
+        ${article.bodyHtml},
+        ${article.imageUrl},
+        ${article.faviconUrl},
+        ${article.authorName},
         ${article.sourceName},
         ${article.sourceUrl},
+        ${article.sourceHomeUrl},
+        ${article.sourceCountryName},
+        ${article.sourceCountryCode},
         ${article.latitude}::float8,
         ${article.longitude}::float8,
         ${article.categoryId}::int,
         ${textArray(article.tags)},
         ${article.publishedAt}::timestamptz,
         ${article.isBreaking}::boolean,
+        ${article.isFree}::boolean,
+        ${article.isDuplicate}::boolean,
+        ${article.shareCount}::int,
+        ${article.readTimeMinutes}::int,
+        ${article.wordsCount}::int,
+        ${article.sourceRank}::int,
         ${article.storyId}
       )`,
     ),
@@ -213,9 +312,21 @@ function articleRows(articles: readonly UpsertArticle[]): SQL {
 
 function filedRows(articles: readonly UpsertArticle[]): SQL {
   const rows = articles.flatMap((article) =>
-    article.categoryIds.map((categoryId) => sql`(${article.apitubeId}, ${categoryId}::int)`),
+    article.filedCategories.map(
+      (filed) => sql`(${article.apitubeId}, ${filed.categoryId}::int, ${filed.score}::float8)`,
+    ),
   )
   return sql.join(rows, sql`, `)
+}
+
+function countryRows(articles: readonly UpsertArticle[]): SQL {
+  const rows = articles.flatMap((article) =>
+    article.countryCodes.map((countryCode) => sql`(${article.apitubeId}, ${countryCode})`),
+  )
+  if (rows.length === 0) {
+    return sql`SELECT NULL::text AS apitube_id, NULL::text AS country_code WHERE false`
+  }
+  return sql`SELECT * FROM (VALUES ${sql.join(rows, sql`, `)}) AS c(apitube_id, country_code)`
 }
 
 export function compileSql(query: SQL): CompiledSql {

@@ -158,21 +158,37 @@ function dedupeArticles(articles: readonly UpsertArticle[]): UpsertArticle[] {
 
 /** Map one located item to the article row and its category chain. */
 function toUpsert(item: LocatedItem, categoryIndex: CategoryFilingIndex): UpsertArticle {
-  const filedCategories = resolveArticleCategories(categoryIndex, item.medtopIds)
+  const scores = new Map(item.topics.map((topic) => [topic.medtopId, topic.score]))
+  const filedCategories = resolveArticleCategories(categoryIndex, item.medtopIds, scores)
   return {
     apitubeId: item.apitubeId,
     title: item.title,
-    summary: item.summary,
+    description: item.description,
     body: item.body,
+    bodyHtml: item.bodyHtml,
+    imageUrl: item.imageUrl,
+    faviconUrl: item.faviconUrl,
+    authorName: item.authorName,
     sourceName: item.sourceName,
     sourceUrl: item.sourceUrl,
+    sourceHomeUrl: item.sourceHomeUrl,
+    sourceCountryName: item.sourceCountryName,
+    sourceCountryCode: item.sourceCountryCode,
     latitude: item.latitude,
     longitude: item.longitude,
     categoryId: filedCategories.categoryId,
     categoryIds: filedCategories.categoryIds,
+    filedCategories: filedCategories.filedCategories,
+    countryCodes: item.countryCodes,
     tags: item.tags,
     publishedAt: item.publishedAt,
     isBreaking: item.isBreaking,
+    isFree: item.isFree,
+    isDuplicate: item.isDuplicate,
+    shareCount: item.shareCount,
+    readTimeMinutes: item.readTimeMinutes,
+    wordsCount: item.wordsCount,
+    sourceRank: item.sourceRank,
     storyId: item.storyId,
   }
 }

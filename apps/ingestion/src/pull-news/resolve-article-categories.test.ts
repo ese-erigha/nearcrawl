@@ -59,6 +59,18 @@ describe('resolveArticleCategories', () => {
     assert.equal(resolved.unknownTopics, 0)
   })
 
+  it('when two children share an ancestor, then that ancestor keeps the higher score', () => {
+    const next = buildCategoryFilingIndex(categories)
+    addToCategoryFilingIndex(next, { id: 50, parentId: 6, medtopId: 'medtop:20000349' })
+    const scores = new Map<string, number | null>([
+      ['medtop:20000350', 0.2],
+      ['medtop:20000349', 0.9],
+    ])
+    const resolved = resolveArticleCategories(next, ['medtop:20000350', 'medtop:20000349'], scores)
+    assert.equal(resolved.filedCategories.find((row) => row.categoryId === 6)?.score, 0.9)
+    assert.equal(resolved.filedCategories.find((row) => row.categoryId === 204)?.score, 0.2)
+  })
+
   it('when a category parent is missing from the loaded set, then the index build fails', () => {
     const broken: FilingCategory[] = [
       { id: 6, parentId: null, medtopId: 'medtop:04000000' },

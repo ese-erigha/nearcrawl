@@ -9,7 +9,7 @@ describe('createBookmark', () => {
     const bookmark = createBookmark(
       {
         title: 'Port closure',
-        summary: 'Shipping halted overnight.',
+        description: 'Shipping halted overnight.',
         sourceUrl: 'https://example.com/port',
         coordinates: { latitude: 1.3, longitude: 103.8 },
         tags: ['Geopolitics'],

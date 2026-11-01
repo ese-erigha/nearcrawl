@@ -66,19 +66,33 @@ const config: IngestionConfig = {
 function item(overrides: Partial<NewsItem> = {}): NewsItem {
   const medtopIds = overrides.medtopIds ?? ['medtop:20000350']
   const topics: NewsTopic[] =
-    overrides.topics ?? medtopIds.map((medtopId) => ({ medtopId, name: null, parentMedtopId: null }))
+    overrides.topics ??     medtopIds.map((medtopId) => ({ medtopId, name: null, parentMedtopId: null, score: null }))
   return {
     apitubeId: 'abc',
     title: 'Headline',
-    summary: 'Short',
+    description: 'Short',
     body: 'Body',
+    bodyHtml: null,
+    imageUrl: null,
+    faviconUrl: null,
+    authorName: null,
     sourceName: 'example.com',
     sourceUrl: 'https://example.com/a',
+    sourceHomeUrl: null,
+    sourceCountryName: null,
+    sourceCountryCode: null,
     latitude: 1.3,
     longitude: 103.8,
+    countryCodes: [],
     tags: [],
     publishedAt: new Date(),
     isBreaking: false,
+    isFree: null,
+    isDuplicate: false,
+    shareCount: 0,
+    readTimeMinutes: null,
+    wordsCount: null,
+    sourceRank: null,
     storyId: null,
     ...overrides,
     topics,
@@ -203,6 +217,7 @@ describe('pullNews', () => {
       medtopId: 'medtop:20009999',
       name: 'digital currency',
       parentMedtopId: 'medtop:20000350',
+      score: null,
     }
     pages = [{ items: [item({ topics: [topic] })], dropped: 0, hasNextPage: false }]
     const counts = await runWithConfig(config, () => pullNews())

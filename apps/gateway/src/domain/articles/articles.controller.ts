@@ -2,11 +2,21 @@ import { Hono } from 'hono'
 
 import { handleErrors } from '../../lib/errors.ts'
 import type { ControllerContext } from '../../types.ts'
-import { articleIdSchema } from './articles.validation.ts'
+import { articleIdSchema, hotNewsQuerySchema } from './articles.validation.ts'
 import { getArticle } from './usecases/get-article.usecase.ts'
+import { listHotNews } from './usecases/list-hot-news.usecase.ts'
 import { sealArticle } from './usecases/seal-article.usecase.ts'
 
 const app = new Hono<ControllerContext>()
+
+app.get(
+  '/',
+  handleErrors(async (c) => {
+    const query = hotNewsQuerySchema.parse(c.req.query())
+    const response = await listHotNews(query.country)
+    return c.json(response)
+  }),
+)
 
 app.get(
   '/:id',

@@ -15,6 +15,13 @@
       "when": 1793065590162,
       "tag": "0001_news_categories",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793504412769,
+      "tag": "0002_article_reader_fields",
+      "breakpoints": true
     }
   ]
 }

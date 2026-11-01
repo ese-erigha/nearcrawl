@@ -9,6 +9,8 @@ export interface GatewayBindings {
   SPATIAL_NEWS_CAP?: string
   CATEGORY_ARTICLES_DEFAULT?: string
   CATEGORY_ARTICLES_CAP?: string
+  FEED_RETENTION_DAYS?: string
+  HOT_NEWS_CAP?: string
 }
 
 export interface AppConfig {
@@ -20,6 +22,8 @@ export interface AppConfig {
   spatialNewsCap: number
   categoryArticlesDefault: number
   categoryArticlesCap: number
+  feedRetentionDays: number
+  hotNewsCap: number
 }
 
 export function readBindings(raw: unknown): GatewayBindings {
@@ -37,6 +41,8 @@ export function readBindings(raw: unknown): GatewayBindings {
     SPATIAL_NEWS_CAP: textValue(env.SPATIAL_NEWS_CAP),
     CATEGORY_ARTICLES_DEFAULT: textValue(env.CATEGORY_ARTICLES_DEFAULT),
     CATEGORY_ARTICLES_CAP: textValue(env.CATEGORY_ARTICLES_CAP),
+    FEED_RETENTION_DAYS: textValue(env.FEED_RETENTION_DAYS),
+    HOT_NEWS_CAP: textValue(env.HOT_NEWS_CAP),
   }
 }
 
@@ -45,6 +51,8 @@ export function createConfig(raw: unknown): AppConfig {
   const spatialNewsCap = requiredInt(env.SPATIAL_NEWS_CAP, 'SPATIAL_NEWS_CAP')
   const categoryArticlesDefault = requiredInt(env.CATEGORY_ARTICLES_DEFAULT, 'CATEGORY_ARTICLES_DEFAULT')
   const categoryArticlesCap = requiredInt(env.CATEGORY_ARTICLES_CAP, 'CATEGORY_ARTICLES_CAP')
+  const feedRetentionDays = requiredInt(env.FEED_RETENTION_DAYS, 'FEED_RETENTION_DAYS')
+  const hotNewsCap = requiredInt(env.HOT_NEWS_CAP, 'HOT_NEWS_CAP')
   if (categoryArticlesDefault > categoryArticlesCap) {
     throw new Error('CATEGORY_ARTICLES_DEFAULT exceeds CATEGORY_ARTICLES_CAP')
   }
@@ -57,11 +65,19 @@ export function createConfig(raw: unknown): AppConfig {
     spatialNewsCap,
     categoryArticlesDefault,
     categoryArticlesCap,
+    feedRetentionDays,
+    hotNewsCap,
   }
 }
 
 function businessVars(env: GatewayBindings): GatewayBindings {
-  if (env.SPATIAL_NEWS_CAP && env.CATEGORY_ARTICLES_DEFAULT && env.CATEGORY_ARTICLES_CAP) {
+  if (
+    env.SPATIAL_NEWS_CAP &&
+    env.CATEGORY_ARTICLES_DEFAULT &&
+    env.CATEGORY_ARTICLES_CAP &&
+    env.FEED_RETENTION_DAYS &&
+    env.HOT_NEWS_CAP
+  ) {
     return env
   }
   const vars = readWranglerVars()
@@ -70,6 +86,8 @@ function businessVars(env: GatewayBindings): GatewayBindings {
     SPATIAL_NEWS_CAP: env.SPATIAL_NEWS_CAP ?? vars.SPATIAL_NEWS_CAP,
     CATEGORY_ARTICLES_DEFAULT: env.CATEGORY_ARTICLES_DEFAULT ?? vars.CATEGORY_ARTICLES_DEFAULT,
     CATEGORY_ARTICLES_CAP: env.CATEGORY_ARTICLES_CAP ?? vars.CATEGORY_ARTICLES_CAP,
+    FEED_RETENTION_DAYS: env.FEED_RETENTION_DAYS ?? vars.FEED_RETENTION_DAYS,
+    HOT_NEWS_CAP: env.HOT_NEWS_CAP ?? vars.HOT_NEWS_CAP,
   }
 }
 

@@ -6,7 +6,7 @@ export type GeoPoint = {
 export type Bookmark = {
   id: string
   title: string
-  summary: string
+  description: string
   sourceUrl: string
   coordinates: GeoPoint
   tags: string[]

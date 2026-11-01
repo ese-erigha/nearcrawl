@@ -22,6 +22,16 @@ export const spatialNewsLiveBodySchema = z
 
 export const articleIdSchema = z.uuid()
 
+export const hotNewsQuerySchema = z
+  .object({
+    country: z
+      .string()
+      .trim()
+      .regex(/^[A-Za-z]{2}$/, 'country must be two letters')
+      .transform((value) => value.toUpperCase()),
+  })
+  .strict()
+
 function parseBBoxText(value: string, ctx: z.RefinementCtx): BBox {
   const parts = value.split(',')
   if (parts.length !== 4) {

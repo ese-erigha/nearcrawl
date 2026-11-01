@@ -1,4 +1,4 @@
-import { index, integer, pgTable, primaryKey, uuid } from 'drizzle-orm/pg-core'
+import { doublePrecision, index, integer, pgTable, primaryKey, uuid } from 'drizzle-orm/pg-core'
 
 import { articles } from './articles.ts'
 import { categories } from './categories.ts'
@@ -12,6 +12,7 @@ export const articleCategories = pgTable(
     categoryId: integer('category_id')
       .notNull()
       .references(() => categories.id),
+    score: doublePrecision('score'),
   },
   (table) => [
     primaryKey({ columns: [table.articleId, table.categoryId] }),

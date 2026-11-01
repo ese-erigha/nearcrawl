@@ -19,6 +19,8 @@ describe('spatialNewsSql', () => {
     assert.match(compiled.sql, /longitude >=/)
     assert.match(compiled.sql, /article_categories/)
     assert.match(compiled.sql, /LIMIT/)
+    assert.match(compiled.sql, /description/)
+    assert.equal(compiled.sql.includes('summary'), false)
     assert.equal(compiled.sql.includes('now()'), false)
     assert.equal(compiled.params.includes(170), true)
     assert.equal(compiled.params.includes(CATEGORY.FINANCE), true)

@@ -2,6 +2,7 @@ import {
   articleByIdSql,
   categoryArticlesSql,
   existingApitubeIdsSql,
+  hotNewsSql,
   purgeArticlesSql,
   spatialNewsSql,
   upsertArticlesSql,
@@ -22,6 +23,12 @@ export type SpatialNewsQuery = {
   limit: number
 }
 
+export type HotNewsQuery = {
+  countryCode: string
+  publishedAfter: Date
+  limit: number
+}
+
 export type FiledTopic = {
   id: number
   name: string
@@ -30,10 +37,17 @@ export type FiledTopic = {
 export type ArticleRow = {
   id: string
   title: string
-  summary: string
+  description: string | null
   body: string
+  body_html: string | null
+  image_url: string | null
+  favicon_url: string | null
+  author_name: string | null
   source_name: string
   source_url: string
+  source_home_url: string | null
+  source_country_name: string | null
+  source_country_code: string | null
   latitude: number
   longitude: number
   category_id: number
@@ -41,6 +55,13 @@ export type ArticleRow = {
   tags: string[]
   published_at: Date
   is_breaking: boolean
+  is_free: boolean | null
+  is_duplicate: boolean
+  share_count: number
+  read_time_minutes: number | null
+  words_count: number | null
+  source_rank: number | null
+  country_codes: string[]
 }
 
 export class DbArticleRepository {
@@ -76,6 +97,17 @@ export class DbArticleRepository {
     return this.read(categoryArticlesSql(categoryId, limit), false)
   }
 
+  async listHotByCountry(query: HotNewsQuery): Promise<ArticleRow[]> {
+    return this.read(
+      hotNewsSql({
+        countryCode: query.countryCode,
+        publishedAfter: query.publishedAfter,
+        limit: query.limit,
+      }),
+      false,
+    )
+  }
+
   async listExistingApitubeIds(apitubeIds: readonly string[]): Promise<string[]> {
     if (apitubeIds.length === 0) {
       return []
@@ -107,10 +139,17 @@ function toRow(record: Record<string, unknown>, includeBody: boolean): ArticleRo
   return {
     id: String(record.id),
     title: String(record.title),
-    summary: String(record.summary),
+    description: nullableText(record.description),
     body: includeBody ? String(record.body ?? '') : '',
+    body_html: nullableText(record.body_html),
+    image_url: nullableText(record.image_url),
+    favicon_url: nullableText(record.favicon_url),
+    author_name: nullableText(record.author_name),
     source_name: String(record.source_name),
     source_url: String(record.source_url),
+    source_home_url: nullableText(record.source_home_url),
+    source_country_name: nullableText(record.source_country_name),
+    source_country_code: nullableText(record.source_country_code),
     latitude: Number(record.latitude),
     longitude: Number(record.longitude),
     category_id: Number(record.category_id),
@@ -119,7 +158,28 @@ function toRow(record: Record<string, unknown>, includeBody: boolean): ArticleRo
     published_at:
       record.published_at instanceof Date ? record.published_at : new Date(String(record.published_at)),
     is_breaking: record.is_breaking === true,
+    is_free: record.is_free === true ? true : record.is_free === false ? false : null,
+    is_duplicate: record.is_duplicate === true,
+    share_count: nullableInt(record.share_count) ?? 0,
+    read_time_minutes: nullableInt(record.read_time_minutes),
+    words_count: nullableInt(record.words_count),
+    source_rank: nullableInt(record.source_rank),
+    country_codes: [],
   }
+}
+
+function nullableText(value: unknown): string | null {
+  return typeof value === 'string' && value !== '' ? value : null
+}
+
+function nullableInt(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isInteger(value)) {
+    return value
+  }
+  if (typeof value === 'string' && /^-?\d+$/.test(value)) {
+    return Number(value)
+  }
+  return null
 }
 
 function readFiled(value: unknown): FiledTopic[] {

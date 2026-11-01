@@ -38,7 +38,7 @@ describe('toNewsItem', () => {
   it('when the article has a medtop link, then the item keeps that id and the description', () => {
     const item = toNewsItem(article)
     assert.equal(item?.apitubeId, '42')
-    assert.equal(item?.summary, 'Short')
+    assert.equal(item?.description, 'Short')
     assert.equal(item?.sourceName, 'example.com')
     assert.deepEqual(item?.medtopIds, ['medtop:20000350'])
     assert.deepEqual(item?.tags, ['bank'])
@@ -68,6 +68,52 @@ describe('toNewsItem', () => {
     const item = toNewsItem({ ...article, locations_mentioned: [] })
     assert.equal(item?.latitude, null)
     assert.equal(item?.longitude, null)
+  })
+
+  it('when description is absent and summary has sentences, then the stored description is null', () => {
+    const item = toNewsItem({
+      ...article,
+      description: undefined,
+      summary: [{ sentence: 'A key sentence' }],
+    })
+    assert.equal(item?.description, null)
+  })
+
+  it('when body is absent and description is present, then body stores that description', () => {
+    const item = toNewsItem({ ...article, body: undefined })
+    assert.equal(item?.body, 'Short')
+  })
+
+  it('when two places use FR, then one country code is stored', () => {
+    const item = toNewsItem({
+      ...article,
+      locations_mentioned: [
+        { country: 'FR', lat: 48.8, lng: 2.3 },
+        { country: 'fr', lat: 45.7, lng: 4.8 },
+      ],
+    })
+    assert.deepEqual(item?.countryCodes, ['FR'])
+  })
+
+  it('when places use FR and US, then both country codes are stored', () => {
+    const item = toNewsItem({
+      ...article,
+      locations_mentioned: [
+        { country: 'FR', lat: 48.8, lng: 2.3 },
+        { country: 'US', lat: 40.7, lng: -74 },
+      ],
+    })
+    assert.deepEqual(item?.countryCodes, ['FR', 'US'])
+  })
+
+  it('when the publisher country is us, then source country is US and the story countries stay unchanged', () => {
+    const item = toNewsItem({
+      ...article,
+      source: { domain: 'example.com', location: { country_code: 'us', country_name: 'United States' } },
+      locations_mentioned: [{ country: 'FR', lat: 48.8, lng: 2.3 }],
+    })
+    assert.equal(item?.sourceCountryCode, 'US')
+    assert.deepEqual(item?.countryCodes, ['FR'])
   })
 })
 
