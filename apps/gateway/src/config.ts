@@ -1,3 +1,5 @@
+import { z } from 'zod'
+
 import { readWranglerVars } from './wrangler-vars.ts'
 
 export interface GatewayBindings {
@@ -14,11 +16,11 @@ export interface GatewayBindings {
 }
 
 export interface AppConfig {
-  databaseUrl?: string
-  neonRealtimeUrl?: string
-  neonRealtimeSecret?: string
-  sentryDsn?: string
-  sentryEnvironment?: string
+  databaseUrl: string
+  neonRealtimeUrl: string
+  neonRealtimeSecret: string
+  sentryDsn: string
+  sentryEnvironment: string
   spatialNewsCap: number
   categoryArticlesDefault: number
   categoryArticlesCap: number
@@ -46,28 +48,58 @@ export function readBindings(raw: unknown): GatewayBindings {
   }
 }
 
+const positiveInt = (name: string) =>
+  z
+    .string({ error: `${name} must be a positive integer` })
+    .regex(/^[1-9]\d*$/, { error: `${name} must be a positive integer` })
+    .transform(Number)
+
+const requiredText = (name: string) =>
+  z
+    .string({ error: `${name} is required` })
+    .trim()
+    .min(1, { error: `${name} is required` })
+
+const gatewayConfigSchema = z
+  .object({
+    DATABASE_URL: requiredText('DATABASE_URL'),
+    NEON_REALTIME_URL: requiredText('NEON_REALTIME_URL'),
+    NEON_REALTIME_SECRET: requiredText('NEON_REALTIME_SECRET'),
+    SENTRY_DSN: requiredText('SENTRY_DSN'),
+    SENTRY_ENVIRONMENT: requiredText('SENTRY_ENVIRONMENT'),
+    SPATIAL_NEWS_CAP: positiveInt('SPATIAL_NEWS_CAP'),
+    CATEGORY_ARTICLES_DEFAULT: positiveInt('CATEGORY_ARTICLES_DEFAULT'),
+    CATEGORY_ARTICLES_CAP: positiveInt('CATEGORY_ARTICLES_CAP'),
+    FEED_RETENTION_DAYS: positiveInt('FEED_RETENTION_DAYS'),
+    HOT_NEWS_CAP: positiveInt('HOT_NEWS_CAP'),
+  })
+  .refine((value) => value.CATEGORY_ARTICLES_DEFAULT <= value.CATEGORY_ARTICLES_CAP, {
+    error: 'CATEGORY_ARTICLES_DEFAULT exceeds CATEGORY_ARTICLES_CAP',
+  })
+
 export function createConfig(raw: unknown): AppConfig {
   const env = businessVars(readBindings(raw))
-  const spatialNewsCap = requiredInt(env.SPATIAL_NEWS_CAP, 'SPATIAL_NEWS_CAP')
-  const categoryArticlesDefault = requiredInt(env.CATEGORY_ARTICLES_DEFAULT, 'CATEGORY_ARTICLES_DEFAULT')
-  const categoryArticlesCap = requiredInt(env.CATEGORY_ARTICLES_CAP, 'CATEGORY_ARTICLES_CAP')
-  const feedRetentionDays = requiredInt(env.FEED_RETENTION_DAYS, 'FEED_RETENTION_DAYS')
-  const hotNewsCap = requiredInt(env.HOT_NEWS_CAP, 'HOT_NEWS_CAP')
-  if (categoryArticlesDefault > categoryArticlesCap) {
-    throw new Error('CATEGORY_ARTICLES_DEFAULT exceeds CATEGORY_ARTICLES_CAP')
-  }
+  const data = parseConfig(gatewayConfigSchema, env)
   return {
-    databaseUrl: env.DATABASE_URL,
-    neonRealtimeUrl: env.NEON_REALTIME_URL,
-    neonRealtimeSecret: env.NEON_REALTIME_SECRET,
-    sentryDsn: env.SENTRY_DSN,
-    sentryEnvironment: env.SENTRY_ENVIRONMENT,
-    spatialNewsCap,
-    categoryArticlesDefault,
-    categoryArticlesCap,
-    feedRetentionDays,
-    hotNewsCap,
+    databaseUrl: data.DATABASE_URL,
+    neonRealtimeUrl: data.NEON_REALTIME_URL,
+    neonRealtimeSecret: data.NEON_REALTIME_SECRET,
+    sentryDsn: data.SENTRY_DSN,
+    sentryEnvironment: data.SENTRY_ENVIRONMENT,
+    spatialNewsCap: data.SPATIAL_NEWS_CAP,
+    categoryArticlesDefault: data.CATEGORY_ARTICLES_DEFAULT,
+    categoryArticlesCap: data.CATEGORY_ARTICLES_CAP,
+    feedRetentionDays: data.FEED_RETENTION_DAYS,
+    hotNewsCap: data.HOT_NEWS_CAP,
   }
+}
+
+function parseConfig<T>(schema: z.ZodType<T>, value: unknown): T {
+  const parsed = schema.safeParse(value)
+  if (!parsed.success) {
+    throw new Error(parsed.error.issues[0]?.message ?? 'Config is invalid')
+  }
+  return parsed.data
 }
 
 function businessVars(env: GatewayBindings): GatewayBindings {
@@ -76,7 +108,8 @@ function businessVars(env: GatewayBindings): GatewayBindings {
     env.CATEGORY_ARTICLES_DEFAULT &&
     env.CATEGORY_ARTICLES_CAP &&
     env.FEED_RETENTION_DAYS &&
-    env.HOT_NEWS_CAP
+    env.HOT_NEWS_CAP &&
+    env.SENTRY_ENVIRONMENT
   ) {
     return env
   }
@@ -88,14 +121,8 @@ function businessVars(env: GatewayBindings): GatewayBindings {
     CATEGORY_ARTICLES_CAP: env.CATEGORY_ARTICLES_CAP ?? vars.CATEGORY_ARTICLES_CAP,
     FEED_RETENTION_DAYS: env.FEED_RETENTION_DAYS ?? vars.FEED_RETENTION_DAYS,
     HOT_NEWS_CAP: env.HOT_NEWS_CAP ?? vars.HOT_NEWS_CAP,
+    SENTRY_ENVIRONMENT: env.SENTRY_ENVIRONMENT ?? vars.SENTRY_ENVIRONMENT,
   }
-}
-
-function requiredInt(value: string | undefined, name: string): number {
-  if (value === undefined || !/^[1-9]\d*$/.test(value)) {
-    throw new Error(`${name} must be a positive integer`)
-  }
-  return Number(value)
 }
 
 function textValue(value: unknown): string | undefined {

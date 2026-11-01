@@ -1,5 +1,6 @@
 import { AsyncLocalStorage } from 'node:async_hooks'
 import { readFileSync } from 'node:fs'
+import { z } from 'zod'
 
 export const PULL_CRON = '*/17 * * * *'
 export const PURGE_CRON = '0 0 * * *'
@@ -22,7 +23,7 @@ export type IngestionConfig = {
   intervalMinutes: number
   maxPages: number
   sentryDsn: string
-  sentryEnvironment: string | undefined
+  sentryEnvironment: string
 }
 
 const currentConfig = new AsyncLocalStorage<IngestionConfig>()
@@ -39,15 +40,49 @@ export function getIngestionConfig(): IngestionConfig {
   return config
 }
 
+const positiveInt = (name: string) =>
+  z
+    .string({ error: `${name} must be a positive integer` })
+    .regex(/^[1-9]\d*$/, { error: `${name} must be a positive integer` })
+    .transform(Number)
+
+const requiredText = (name: string) =>
+  z
+    .string({ error: `${name} is required` })
+    .trim()
+    .min(1, { error: `${name} is required` })
+
+const scheduleSchema = z.object({
+  INGESTION_INTERVAL_MINUTES: positiveInt('INGESTION_INTERVAL_MINUTES'),
+  FEED_RETENTION_DAYS: positiveInt('FEED_RETENTION_DAYS'),
+  APITUBE_MAX_PAGES: positiveInt('APITUBE_MAX_PAGES'),
+})
+
+const ingestionEnvSchema = scheduleSchema.extend({
+  DATABASE_URL: requiredText('DATABASE_URL'),
+  APITUBE_API_KEY: requiredText('APITUBE_API_KEY'),
+  SENTRY_DSN: requiredText('SENTRY_DSN'),
+  SENTRY_ENVIRONMENT: requiredText('SENTRY_ENVIRONMENT'),
+})
+
 export function readIngestionConfig(env: IngestionEnv): IngestionConfig {
+  const data = parseConfig(ingestionEnvSchema, {
+    DATABASE_URL: env.DATABASE_URL,
+    APITUBE_API_KEY: env.APITUBE_API_KEY,
+    SENTRY_DSN: env.SENTRY_DSN,
+    SENTRY_ENVIRONMENT: wranglerVar(env, 'SENTRY_ENVIRONMENT'),
+    INGESTION_INTERVAL_MINUTES: wranglerVar(env, 'INGESTION_INTERVAL_MINUTES'),
+    FEED_RETENTION_DAYS: wranglerVar(env, 'FEED_RETENTION_DAYS'),
+    APITUBE_MAX_PAGES: wranglerVar(env, 'APITUBE_MAX_PAGES'),
+  })
   return {
-    databaseUrl: requiredText(env.DATABASE_URL, 'DATABASE_URL'),
-    apitubeApiKey: env.APITUBE_API_KEY?.trim() ?? '',
-    retentionDays: requiredInt(limitValue(env, 'FEED_RETENTION_DAYS'), 'FEED_RETENTION_DAYS'),
-    intervalMinutes: requiredInt(limitValue(env, 'INGESTION_INTERVAL_MINUTES'), 'INGESTION_INTERVAL_MINUTES'),
-    maxPages: requiredInt(limitValue(env, 'APITUBE_MAX_PAGES'), 'APITUBE_MAX_PAGES'),
-    sentryDsn: env.SENTRY_DSN?.trim() ?? '',
-    sentryEnvironment: env.SENTRY_ENVIRONMENT,
+    databaseUrl: data.DATABASE_URL,
+    apitubeApiKey: data.APITUBE_API_KEY,
+    retentionDays: data.FEED_RETENTION_DAYS,
+    intervalMinutes: data.INGESTION_INTERVAL_MINUTES,
+    maxPages: data.APITUBE_MAX_PAGES,
+    sentryDsn: data.SENTRY_DSN,
+    sentryEnvironment: data.SENTRY_ENVIRONMENT,
   }
 }
 
@@ -56,16 +91,29 @@ export function readScheduleLimits(env: IngestionEnv = {}): {
   retentionDays: number
   maxPages: number
 } {
+  const data = parseConfig(scheduleSchema, {
+    INGESTION_INTERVAL_MINUTES: wranglerVar(env, 'INGESTION_INTERVAL_MINUTES'),
+    FEED_RETENTION_DAYS: wranglerVar(env, 'FEED_RETENTION_DAYS'),
+    APITUBE_MAX_PAGES: wranglerVar(env, 'APITUBE_MAX_PAGES'),
+  })
   return {
-    intervalMinutes: requiredInt(limitValue(env, 'INGESTION_INTERVAL_MINUTES'), 'INGESTION_INTERVAL_MINUTES'),
-    retentionDays: requiredInt(limitValue(env, 'FEED_RETENTION_DAYS'), 'FEED_RETENTION_DAYS'),
-    maxPages: requiredInt(limitValue(env, 'APITUBE_MAX_PAGES'), 'APITUBE_MAX_PAGES'),
+    intervalMinutes: data.INGESTION_INTERVAL_MINUTES,
+    retentionDays: data.FEED_RETENTION_DAYS,
+    maxPages: data.APITUBE_MAX_PAGES,
   }
 }
 
-function limitValue(
+function parseConfig<T>(schema: z.ZodType<T>, value: unknown): T {
+  const parsed = schema.safeParse(value)
+  if (!parsed.success) {
+    throw new Error(parsed.error.issues[0]?.message ?? 'Config is invalid')
+  }
+  return parsed.data
+}
+
+function wranglerVar(
   env: IngestionEnv,
-  name: 'INGESTION_INTERVAL_MINUTES' | 'FEED_RETENTION_DAYS' | 'APITUBE_MAX_PAGES',
+  name: 'INGESTION_INTERVAL_MINUTES' | 'FEED_RETENTION_DAYS' | 'APITUBE_MAX_PAGES' | 'SENTRY_ENVIRONMENT',
 ): string | undefined {
   const fromEnv = env[name]
   if (fromEnv) {
@@ -106,17 +154,3 @@ function parseVarsSection(toml: string): Record<string, string> {
   return parsed
 }
 
-function requiredText(value: string | undefined, name: string): string {
-  const text = value?.trim() ?? ''
-  if (!text) {
-    throw new Error(`${name} is required`)
-  }
-  return text
-}
-
-function requiredInt(value: string | undefined, name: string): number {
-  if (value === undefined || !/^[1-9]\d*$/.test(value)) {
-    throw new Error(`${name} must be a positive integer`)
-  }
-  return Number(value)
-}

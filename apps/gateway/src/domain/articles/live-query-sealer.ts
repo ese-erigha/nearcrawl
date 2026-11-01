@@ -40,10 +40,7 @@ function scalarParameters(params: readonly unknown[]): RawSqlParameter[] {
   })
 }
 
-function databaseName(databaseUrl: string | undefined): string {
-  if (!databaseUrl) {
-    return 'neondb'
-  }
+function databaseName(databaseUrl: string): string {
   const pathname = new URL(databaseUrl).pathname.replace(/^\//, '')
   return pathname === '' ? 'neondb' : pathname
 }

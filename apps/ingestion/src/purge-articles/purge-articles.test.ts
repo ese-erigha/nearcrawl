@@ -26,8 +26,8 @@ const config: IngestionConfig = {
   retentionDays: 14,
   intervalMinutes: 17,
   maxPages: 100,
-  sentryDsn: '',
-  sentryEnvironment: undefined,
+  sentryDsn: 'https://local@sentry.test/1',
+  sentryEnvironment: 'test',
 }
 
 describe('purgeArticles', () => {

@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 
-import { runWithConfig, type IngestionConfig } from '../config.ts'
-import { listNewsPage, readNewsPage, toNewsItem } from './apitube.client.ts'
+import { runWithConfig, type IngestionConfig } from '../../config.ts'
+import { listNewsPage, toNewsItem } from './news.service.ts'
 
 const config: IngestionConfig = {
   databaseUrl: 'postgres://local/test',
@@ -10,8 +10,8 @@ const config: IngestionConfig = {
   retentionDays: 14,
   intervalMinutes: 17,
   maxPages: 100,
-  sentryDsn: '',
-  sentryEnvironment: undefined,
+  sentryDsn: 'https://local@sentry.test/1',
+  sentryEnvironment: 'test',
 }
 
 const article = {
@@ -117,12 +117,6 @@ describe('toNewsItem', () => {
   })
 })
 
-describe('readNewsPage', () => {
-  it('when the response status is error, then the page read throws', () => {
-    assert.throws(() => readNewsPage({ status: 'error', results: [] }), /APITube response has no results/)
-  })
-})
-
 describe('listNewsPage', () => {
   it('when the client requests a page, then the key stays in the header', async (t) => {
     const original = globalThis.fetch
@@ -164,13 +158,7 @@ describe('listNewsPage', () => {
       globalThis.fetch = original
     })
     globalThis.fetch = async () => new Response('no', { status: 401 })
-    await assert.rejects(() => runWithConfig(config, () => listNewsPage(1)), /APITube responded 401/)
+    await assert.rejects(() => runWithConfig(config, () => listNewsPage(1)), /APITube responded 401: no/)
   })
 
-  it('when the API key is missing, then the client throws', async () => {
-    await assert.rejects(
-      () => runWithConfig({ ...config, apitubeApiKey: '' }, () => listNewsPage(1)),
-      /APITUBE_API_KEY is required/,
-    )
-  })
 })

@@ -2,7 +2,7 @@ import { requireKnownCategory } from '../../categories/require-known-category.ts
 import { getConfig } from '../../../lib/context.ts'
 import { mapArticlePin, type ArticlePin } from '../articles.mappers.ts'
 import { getArticleRepository } from '../articles.repository.ts'
-import type { SpatialNewsInput } from '../articles.validation.ts'
+import type { SpatialNewsInput } from '../spatial-news.schema.ts'
 
 export async function listSpatialNews(
   input: SpatialNewsInput,

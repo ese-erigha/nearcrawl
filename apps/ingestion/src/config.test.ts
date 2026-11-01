@@ -25,13 +25,37 @@ describe('ingestion config', () => {
     assert.equal(crons.includes(`"${PURGE_CRON}"`), false)
   })
 
-  it('when the environment has no sentry name, then the config leaves sentry off', () => {
+  it('when the API key is missing, then the config read throws', () => {
+    assert.throws(
+      () =>
+        readIngestionConfig({
+          DATABASE_URL: 'postgres://local/test',
+          APITUBE_API_KEY: '',
+          SENTRY_DSN: 'https://local@sentry.test/1',
+          SENTRY_ENVIRONMENT: 'test',
+        }),
+      /APITUBE_API_KEY is required/,
+    )
+  })
+
+  it('when the sentry dsn is missing, then the config read throws', () => {
+    assert.throws(
+      () =>
+        readIngestionConfig({
+          DATABASE_URL: 'postgres://local/test',
+          APITUBE_API_KEY: 'key',
+          SENTRY_ENVIRONMENT: 'test',
+        }),
+      /SENTRY_DSN is required/,
+    )
+  })
+
+  it('when the sentry name is omitted, then the config reads it from wrangler', () => {
     const config = readIngestionConfig({
       DATABASE_URL: 'postgres://local/test',
       APITUBE_API_KEY: 'key',
+      SENTRY_DSN: 'https://local@sentry.test/1',
     })
-    assert.equal(config.sentryEnvironment, undefined)
-    assert.equal(config.sentryDsn, '')
-    assert.equal(config.retentionDays > 0, true)
+    assert.equal(config.sentryEnvironment, 'production')
   })
 })

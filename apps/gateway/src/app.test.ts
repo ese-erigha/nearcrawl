@@ -5,16 +5,29 @@ import { CATEGORY, categoryCatalog } from 'db'
 
 import app from './app.ts'
 import type { ArticlePin } from './domain/articles/articles.mappers.ts'
+import type { GatewayBindings } from './config.ts'
+
+const testEnv: GatewayBindings = {
+  DATABASE_URL: 'postgres://local/test',
+  NEON_REALTIME_URL: 'https://local.test',
+  NEON_REALTIME_SECRET: 'local-secret',
+  SENTRY_DSN: 'https://local@sentry.test/1',
+  SENTRY_ENVIRONMENT: 'test',
+}
+
+function request(path: string, init?: RequestInit) {
+  return app.request(path, init, testEnv)
+}
 
 describe('gateway routes', () => {
   it('reports health without opening a database', async () => {
-    const response = await app.request('/health')
+    const response = await request('/health')
     assert.equal(response.status, 200)
     assert.deepEqual(await response.json(), { status: 'ok' })
   })
 
   it('returns the fixture pin for a box that contains it', async () => {
-    const response = await app.request('/api/spatial/news?bbox=103,1,104,2')
+    const response = await request('/api/spatial/news?bbox=103,1,104,2')
     assert.equal(response.status, 200)
     const body = (await response.json()) as { truncated: boolean; articles: ArticlePin[] }
     assert.equal(body.truncated, false)
@@ -24,12 +37,12 @@ describe('gateway routes', () => {
   })
 
   it('rejects an unknown category id', async () => {
-    const response = await app.request('/api/spatial/news?bbox=103,1,104,2&categoryId=999999')
+    const response = await request('/api/spatial/news?bbox=103,1,104,2&categoryId=999999')
     assert.equal(response.status, 400)
   })
 
   it('lists the menu and a topic with its children', async () => {
-    const menu = await app.request('/api/categories')
+    const menu = await request('/api/categories')
     assert.equal(menu.status, 200)
     const menuBody = (await menu.json()) as { categories: { id: number; childCount: number }[] }
     assert.equal(menuBody.categories[0]?.id, CATEGORY.POLITICS)
@@ -39,7 +52,7 @@ describe('gateway routes', () => {
     const musicalGenre = categoryCatalog.find((row) => row.medtopId === 'medtop:20000021')
     assert.ok(music)
     assert.ok(musicalGenre)
-    const topic = await app.request(`/api/categories/${music.id}`)
+    const topic = await request(`/api/categories/${music.id}`)
     assert.equal(topic.status, 200)
     const topicBody = (await topic.json()) as {
       parent: { id: number } | null
@@ -50,23 +63,23 @@ describe('gateway routes', () => {
   })
 
   it('returns category not found for an unknown topic', async () => {
-    const missing = await app.request('/api/categories/999999')
+    const missing = await request('/api/categories/999999')
     assert.equal(missing.status, 404)
     assert.deepEqual(await missing.json(), { error: 'Category not found' })
 
-    const text = await app.request('/api/categories/not-a-topic')
+    const text = await request('/api/categories/not-a-topic')
     assert.equal(text.status, 400)
   })
 
   it('returns the fixture from the politics article list', async () => {
-    const response = await app.request(`/api/categories/${CATEGORY.POLITICS}/articles`)
+    const response = await request(`/api/categories/${CATEGORY.POLITICS}/articles`)
     assert.equal(response.status, 200)
     const body = (await response.json()) as { articles: ArticlePin[] }
     assert.equal(body.articles[0]?.categoryId, CATEGORY.POLITICS)
   })
 
   it('returns validation details when bbox is missing', async () => {
-    const response = await app.request('/api/spatial/news')
+    const response = await request('/api/spatial/news')
     assert.equal(response.status, 400)
     const body = (await response.json()) as { error: string; details: unknown }
     assert.equal(body.error, 'Validation failed')
@@ -74,23 +87,26 @@ describe('gateway routes', () => {
   })
 
   it('when country is missing, then the hot list returns 400', async () => {
-    const response = await app.request('/api/articles')
+    const response = await request('/api/articles')
     assert.equal(response.status, 400)
   })
 
   it('returns article not found for an unknown id', async () => {
-    const response = await app.request('/api/articles/00000000-0000-4000-8000-000000000000')
+    const response = await request('/api/articles/00000000-0000-4000-8000-000000000000')
     assert.equal(response.status, 404)
     assert.deepEqual(await response.json(), { error: 'Article not found' })
   })
 
-  it('returns 503 when the live query sealer env vars are unset', async () => {
-    const response = await app.request('/api/spatial/news/live', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ bbox: [-10, -20, 10, 30] }),
-    })
-    assert.equal(response.status, 503)
-    assert.deepEqual(await response.json(), { error: 'Live query sealer is not configured' })
+  it('when a worker secret is missing, then the request fails', async () => {
+    const response = await app.request(
+      '/api/spatial/news/live',
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ bbox: [-10, -20, 10, 30] }),
+      },
+      { ...testEnv, NEON_REALTIME_SECRET: '' },
+    )
+    assert.equal(response.status, 500)
   })
 })

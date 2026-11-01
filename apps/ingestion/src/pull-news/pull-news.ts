@@ -2,7 +2,7 @@ import { DbArticleRepository, DbCategoryRepository, type UpsertArticle } from 'd
 
 import { DAY_MS, getIngestionConfig } from '../config.ts'
 import { warnSkippedArticle, warnUnknownMedtop } from '../sentry.ts'
-import { listNewsPage, type NewsItem, type NewsTopic } from './apitube.client.ts'
+import { listNewsPage, type NewsItem, type NewsTopic } from './apitube/news.service.ts'
 import {
   addToCategoryFilingIndex,
   buildCategoryFilingIndex,

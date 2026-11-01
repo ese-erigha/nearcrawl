@@ -2,7 +2,7 @@ import { Hono } from 'hono'
 
 import { handleErrors } from '../../lib/errors.ts'
 import type { ControllerContext } from '../../types.ts'
-import { articleIdSchema, hotNewsQuerySchema } from './articles.validation.ts'
+import { articleIdSchema, hotNewsQuerySchema } from './articles.schema.ts'
 import { getArticle } from './usecases/get-article.usecase.ts'
 import { listHotNews } from './usecases/list-hot-news.usecase.ts'
 import { sealArticle } from './usecases/seal-article.usecase.ts'

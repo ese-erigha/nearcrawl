@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { describe, it, mock } from 'node:test'
 
 import { DAY_MS, runWithConfig, type IngestionConfig } from '../config.ts'
-import type { NewsItem, NewsPage, NewsTopic } from './apitube.client.ts'
+import type { NewsItem, NewsPage, NewsTopic } from './apitube/news.service.ts'
 
 const batches: Array<Array<{ apitubeId: string; categoryId: number; categoryIds: number[] }>> = []
 const inserts: Array<{ name: string; parentId: number; medtopId: string }> = []
@@ -41,7 +41,7 @@ mock.module('db', {
   },
 })
 
-mock.module('./apitube.client.ts', {
+mock.module('./apitube/news.service.ts', {
   namedExports: {
     listNewsPage: (page: number) => {
       calls.push(page)
@@ -59,8 +59,8 @@ const config: IngestionConfig = {
   retentionDays: 14,
   intervalMinutes: 17,
   maxPages: 100,
-  sentryDsn: '',
-  sentryEnvironment: undefined,
+  sentryDsn: 'https://local@sentry.test/1',
+  sentryEnvironment: 'test',
 }
 
 function item(overrides: Partial<NewsItem> = {}): NewsItem {

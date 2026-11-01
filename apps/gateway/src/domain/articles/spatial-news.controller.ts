@@ -2,7 +2,7 @@ import { Hono } from 'hono'
 
 import { handleErrors } from '../../lib/errors.ts'
 import type { ControllerContext } from '../../types.ts'
-import { spatialNewsLiveBodySchema, spatialNewsQuerySchema } from './articles.validation.ts'
+import { spatialNewsLiveBodySchema, spatialNewsQuerySchema } from './spatial-news.schema.ts'
 import { listSpatialNews } from './usecases/list-spatial-news.usecase.ts'
 import { sealSpatialNews } from './usecases/seal-spatial-news.usecase.ts'
 
