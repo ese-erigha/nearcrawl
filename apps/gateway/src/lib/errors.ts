@@ -3,6 +3,13 @@ import { ZodError } from 'zod'
 import type { AppContext } from '../types.ts'
 import { reportGatewayError } from './sentry.ts'
 
+export class ValidationError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'ValidationError'
+  }
+}
+
 export class NotFoundError extends Error {
   constructor(message = 'Article not found') {
     super(message)
@@ -49,6 +56,10 @@ function mapError(c: AppContext, error: unknown): Response {
       message: issue.message,
     }))
     return c.json({ error: 'Validation failed', details }, 400)
+  }
+
+  if (error instanceof ValidationError) {
+    return c.json({ error: error.message }, 400)
   }
 
   if (error instanceof NotFoundError) {

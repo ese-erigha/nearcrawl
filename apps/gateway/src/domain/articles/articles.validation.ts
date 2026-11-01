@@ -1,13 +1,8 @@
-import { isCategoryId } from 'db'
 import { z } from 'zod'
 
 import type { BBox } from './articles.types.ts'
 
-const categoryIdSchema = z.coerce
-  .number()
-  .int()
-  .positive()
-  .refine((value) => isCategoryId(value), { message: 'Unknown category' })
+const categoryIdSchema = z.coerce.number().int().positive()
 
 export const spatialNewsQuerySchema = z
   .object({

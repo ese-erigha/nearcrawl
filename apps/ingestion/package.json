@@ -4,11 +4,15 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "node --watch src/index.ts",
+    "dev": "node --env-file=../../.env.var --watch src/index.ts",
     "build": "tsc -p tsconfig.build.json",
     "lint": "oxlint",
     "typecheck": "tsc -p tsconfig.json --noEmit --pretty false",
-    "test": "node --test src/service.test.ts"
+    "test": "node --experimental-test-module-mocks --test --test-isolation=process $(find src -name '*.test.ts')"
+  },
+  "dependencies": {
+    "@sentry/cloudflare": "11.9.0",
+    "db": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^24.19.2",

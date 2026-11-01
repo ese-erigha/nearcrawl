@@ -1,10 +1,10 @@
 # Deploy the gateway Worker
 
-GitHub Actions deploys the gateway. You do not run `wrangler login` for that deploy. The job uses two GitHub secrets. After the Worker exists, you add three secrets in the Cloudflare dashboard.
+GitHub Actions deploys the gateway and the ingestion Worker. You do not run `wrangler login` for that deploy. The jobs use two GitHub secrets. After each Worker exists, you add its secrets in the Cloudflare dashboard.
 
 The Worker name is `nearcrawl-gateway`. The first successful deploy creates it. Do not create a new Cloudflare account. Use the account that already deploys Closetza.
 
-Ingestion and the web app are not in this job.
+The web app is not in this job. The ingestion job is `deploy-ingestion`. Its Worker settings are in [ingestion.md](ingestion.md).
 
 ## GitHub secrets
 
@@ -35,8 +35,9 @@ You can set the same three names with `npx wrangler secret put` from `apps/gatew
 - The job builds `packages/db` first. The gateway imports `packages/db/dist`.
 - Tests must pass. A failed test skips the deploy.
 - A changed SQL file runs migrate before the deploy. A failed migrate skips the deploy.
-- A push to `develop` deploys when it changes `apps/gateway/`, `packages/`, or `.github/workflows/deploy-staging.yml`.
-- A manual run deploys only when you set **Deploy the gateway Worker even when gateway files did not change?** to true.
+- A push to `develop` deploys the gateway when it changes `apps/gateway/`, `packages/`, or `.github/workflows/deploy-staging.yml`.
+- The same push deploys ingestion when it changes `apps/ingestion/`, `packages/`, or that workflow file.
+- A manual run deploys a Worker only when you set its force-deploy input to true.
 
 ## Get the Cloudflare secrets
 

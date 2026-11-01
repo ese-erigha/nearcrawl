@@ -1,6 +1,18 @@
 # NearCrawl ingestion Worker.
 # Local development stays on Node: `pnpm --filter ingestion dev`.
-# Node reads the vars below from this file. Do not hardcode those numbers in code.
+# Node reads the interval, the retention, and the page cap from [vars]. It does not copy SENTRY_ENVIRONMENT.
+#
+# [vars] upload with the deploy. They are not secrets.
+# INGESTION_INTERVAL_MINUTES is the pull spacing. Keep it in step with the pull cron.
+# FEED_RETENTION_DAYS is the age the purge uses when that cron is on.
+# APITUBE_MAX_PAGES is the most pages one pull requests. The run fails above that.
+# SENTRY_ENVIRONMENT=production turns Sentry on after SENTRY_DSN is set.
+#
+# Dashboard secrets on nearcrawl-ingestion. They are not GitHub secrets.
+# DATABASE_URL is the pooled Neon URL. The host contains -pooler.
+# APITUBE_API_KEY is the APITube key. A missing key fails the pull.
+# SENTRY_DSN is the client key for the Sentry project nearcrawl-ingestion.
+# An empty SENTRY_DSN leaves the SDK off. The pull still runs.
 
 name = "nearcrawl-ingestion"
 main = "src/index.ts"
@@ -8,5 +20,12 @@ compatibility_date = "2026-10-26"
 compatibility_flags = ["nodejs_compat"]
 
 [vars]
-INGESTION_INTERVAL_MINUTES = "10"
+INGESTION_INTERVAL_MINUTES = "17"
 FEED_RETENTION_DAYS = "14"
+APITUBE_MAX_PAGES = "100"
+SENTRY_ENVIRONMENT = "production"
+
+# */17 * * * * pulls news every 17 minutes.
+# 0 0 * * * would delete articles older than FEED_RETENTION_DAYS at 00:00 UTC. That cron is off.
+[triggers]
+crons = ["*/17 * * * *"]

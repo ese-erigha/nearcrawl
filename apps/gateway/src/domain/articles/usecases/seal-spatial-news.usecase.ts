@@ -1,11 +1,13 @@
 import { compileSql, spatialNewsSql } from 'db'
 
+import { requireKnownCategory } from '../../categories/require-known-category.ts'
 import { getConfig } from '../../../lib/context.ts'
 import { LiveQuerySealerMissingError } from '../../../lib/errors.ts'
 import { getLiveQuerySealer } from '../live-query-sealer.ts'
 import type { SpatialNewsInput } from '../articles.validation.ts'
 
 export async function sealSpatialNews(input: SpatialNewsInput): Promise<{ sealedQuery: unknown }> {
+  await requireKnownCategory(input.categoryId)
   const sealer = getLiveQuerySealer()
   if (!sealer) {
     throw new LiveQuerySealerMissingError()

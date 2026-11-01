@@ -1,6 +1,6 @@
 import { categoryCatalog, categoryMenu, type CategoryRecord } from 'db'
 
-import type { CategoryDetail, CategoryRepository, CategorySummary } from './categories.types.ts'
+import type { CategoryDetail, CategoryNode, CategoryRepository, CategorySummary } from './categories.types.ts'
 
 const byId = new Map(categoryCatalog.map((row) => [row.id, row]))
 const childrenByParent = new Map<number, CategoryRecord[]>()
@@ -44,6 +44,19 @@ export class MemoryCategoryRepository implements CategoryRepository {
       return row ? [row] : []
     })
     return Promise.resolve(categories)
+  }
+
+  findById(id: number): Promise<CategoryNode | null> {
+    const row = byId.get(id)
+    if (!row) {
+      return Promise.resolve(null)
+    }
+    return Promise.resolve({
+      id: row.id,
+      name: row.name,
+      medtopId: row.medtopId,
+      parentId: row.parentId,
+    })
   }
 
   findWithChildren(id: number): Promise<CategoryDetail | null> {

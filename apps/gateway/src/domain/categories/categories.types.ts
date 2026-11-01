@@ -1,24 +1,9 @@
-export type CategorySummary = {
-  id: number
-  name: string
-  medtopId: string | null
-  childCount: number
-}
+import type { CategoryDetail, CategoryNode, CategorySummary } from 'db'
 
-export type CategoryNode = {
-  id: number
-  name: string
-  medtopId: string | null
-  parentId: number | null
-}
-
-export type CategoryDetail = {
-  category: CategoryNode
-  parent: Omit<CategoryNode, 'parentId'> | null
-  children: CategorySummary[]
-}
+export type { CategoryDetail, CategoryNode, CategorySummary }
 
 export interface CategoryRepository {
   listMenu(): Promise<CategorySummary[]>
+  findById(id: number): Promise<CategoryNode | null>
   findWithChildren(id: number): Promise<CategoryDetail | null>
 }

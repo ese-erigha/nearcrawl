@@ -17,6 +17,29 @@ export function categoryByIdSql(id: number): SQL {
   `
 }
 
+export type InsertCategory = {
+  name: string
+  parentId: number
+  medtopId: string
+}
+
+export function insertCategorySql(category: InsertCategory): SQL {
+  return sql`
+    INSERT INTO categories (name, parent_id, medtop_id)
+    VALUES (${category.name}, ${category.parentId}, ${category.medtopId})
+    ON CONFLICT (medtop_id) DO UPDATE
+    SET medtop_id = EXCLUDED.medtop_id
+    RETURNING id, parent_id, medtop_id
+  `
+}
+
+export function filingCategoriesSql(): SQL {
+  return sql`
+    SELECT id, parent_id, medtop_id
+    FROM categories
+  `
+}
+
 export function categoryChildrenSql(parentId: number): SQL {
   return sql`
     SELECT c.id, c.name, c.medtop_id,

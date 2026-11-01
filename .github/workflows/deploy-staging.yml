@@ -16,6 +16,11 @@ on:
         required: false
         type: boolean
         default: false
+      force_deploy_ingestion:
+        description: "Deploy the ingestion Worker even when ingestion files did not change?"
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   detect-changes:
@@ -42,7 +47,11 @@ jobs:
             else
               echo "gateway=false" >> $GITHUB_OUTPUT
             fi
-            echo "ingestion=false" >> $GITHUB_OUTPUT
+            if [ "${{ inputs.force_deploy_ingestion }}" == "true" ]; then
+              echo "ingestion=true" >> $GITHUB_OUTPUT
+            else
+              echo "ingestion=false" >> $GITHUB_OUTPUT
+            fi
             echo "web=false" >> $GITHUB_OUTPUT
             exit 0
           fi
@@ -70,7 +79,7 @@ jobs:
             echo "gateway=false" >> $GITHUB_OUTPUT
           fi
 
-          if git diff --name-only ${{ github.event.before }}..${{ github.sha }} | grep -E '^(apps/ingestion/|packages/)'; then
+          if git diff --name-only ${{ github.event.before }}..${{ github.sha }} | grep -E '^(apps/ingestion/|packages/|\.github/workflows/deploy-staging\.yml)'; then
             echo "ingestion=true" >> $GITHUB_OUTPUT
           else
             echo "ingestion=false" >> $GITHUB_OUTPUT
@@ -154,10 +163,37 @@ jobs:
           wranglerVersion: "4"
           command: deploy
 
+  deploy-ingestion:
+    runs-on: ubuntu-latest
+    name: Deploy ingestion
+    needs: [detect-changes, test, migrate]
+    if: |
+      always() &&
+      needs.detect-changes.outputs.ingestion == 'true' &&
+      needs.test.result == 'success' &&
+      (needs.migrate.result == 'success' || needs.migrate.result == 'skipped')
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter db build
+      - name: Deploy ingestion to Cloudflare Workers
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: apps/ingestion
+          wranglerVersion: "4"
+          command: deploy
+
   summary:
     runs-on: ubuntu-latest
     name: Staging summary
-    needs: [test, detect-changes, migrate, deploy-gateway]
+    needs: [test, detect-changes, migrate, deploy-gateway, deploy-ingestion]
     if: always()
     steps:
       - name: Workflow summary
@@ -197,4 +233,17 @@ jobs:
             fi
           else
             echo "- Gateway deploy: SKIPPED (no gateway changes)"
+          fi
+
+          if [ "${{ needs.detect-changes.outputs.ingestion }}" == "true" ]; then
+            if [ "${{ needs.deploy-ingestion.result }}" == "success" ]; then
+              echo "- Ingestion deploy: SUCCESS"
+            elif [ "${{ needs.deploy-ingestion.result }}" == "skipped" ]; then
+              echo "- Ingestion deploy: SKIPPED"
+            else
+              echo "- Ingestion deploy: FAILED"
+              exit 1
+            fi
+          else
+            echo "- Ingestion deploy: SKIPPED (no ingestion changes)"
           fi

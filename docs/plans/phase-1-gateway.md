@@ -24,16 +24,7 @@ Build this first. The feed stays empty until Part 2 writes rows. Reads of an emp
 
 ## Part 2 — Ingestion
 
-Start this after Part 1 reads `articles`. `apps/ingestion` stays off the request path.
-
-- Pull APITube `/v1/news/everything` on the interval in `INGESTION_INTERVAL_MINUTES`. That var is in `apps/ingestion/wrangler.toml`.
-- Skip an item that has no coordinates.
-- `upsertByApitubeId` writes the columns APITube owns. `story_id` is stored and unused until product Phase 2.
-- Category labels follow [news-categories.md](news-categories.md). The menu is 17 top-level categories, and every APITube topic under them is a subcategory the reader can filter. Ingestion files each topic on that row and on every ancestor.
-- One purge method deletes rows whose `published_at` is older than `FEED_RETENTION_DAYS` in that same file. That `DELETE` uses `now()`, so it stays out of every sealed query.
-- Sentry project `nearcrawl-ingestion` is created with this part. The gateway project is already enough for Part 1.
-
-The gateway use cases keep calling `findInBBox` and `findById`. They do not gain a write method.
+Start this after Part 1 reads `articles`. The steps are in [ingestion.md](ingestion.md). `apps/ingestion` stays off the request path. The gateway use cases keep calling `findInBBox` and `findById`. They do not gain a write method.
 
 ## User id
 
