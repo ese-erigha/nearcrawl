@@ -47,11 +47,48 @@ export function addToCategoryFilingIndex(categoryIndex: CategoryFilingIndex, cat
   categoryIndex.chainById.set(category.id, [category.id, ...(parentChain ?? [])])
 }
 
+type MatchedTopics = {
+  matchedIds: number[]
+  unknownTopics: number
+  scoreById: Map<number, number | null>
+}
+
+type FiledChains = {
+  categoryIds: number[]
+  roots: number[]
+}
+
 export function resolveArticleCategories(
   categoryIndex: CategoryFilingIndex,
   medtopIds: readonly string[],
   scores: ReadonlyMap<string, number | null> = new Map(),
 ): ResolvedCategories {
+  const matched = matchMedtopIds(categoryIndex, medtopIds, scores)
+  if (matched.matchedIds.length === 0) {
+    return {
+      categoryId: categoryIndex.generalId,
+      categoryIds: [categoryIndex.generalId],
+      filedCategories: [{ categoryId: categoryIndex.generalId, score: null }],
+      unknownTopics: matched.unknownTopics,
+    }
+  }
+  const filed = fileMatchedChains(categoryIndex, matched.matchedIds)
+  return {
+    categoryId: Math.min(...filed.roots),
+    categoryIds: filed.categoryIds,
+    filedCategories: filed.categoryIds.map((categoryId) => ({
+      categoryId,
+      score: matched.scoreById.get(categoryId) ?? null,
+    })),
+    unknownTopics: matched.unknownTopics,
+  }
+}
+
+function matchMedtopIds(
+  categoryIndex: CategoryFilingIndex,
+  medtopIds: readonly string[],
+  scores: ReadonlyMap<string, number | null>,
+): MatchedTopics {
   const matchedIds: number[] = []
   const seen = new Set<number>()
   const unknown = new Set<string>()
@@ -62,10 +99,7 @@ export function resolveArticleCategories(
       unknown.add(medtopId)
       continue
     }
-    const chain = categoryIndex.chainById.get(category.id)
-    if (!chain) {
-      throw new Error(`category ${category.id} has no ancestor chain`)
-    }
+    const chain = requireChain(categoryIndex, category.id)
     const score = scores.get(medtopId) ?? null
     for (const ancestorId of chain) {
       scoreById.set(ancestorId, higherScore(scoreById.get(ancestorId), score))
@@ -76,21 +110,14 @@ export function resolveArticleCategories(
     seen.add(category.id)
     matchedIds.push(category.id)
   }
-  if (matchedIds.length === 0) {
-    return {
-      categoryId: categoryIndex.generalId,
-      categoryIds: [categoryIndex.generalId],
-      filedCategories: [{ categoryId: categoryIndex.generalId, score: null }],
-      unknownTopics: unknown.size,
-    }
-  }
+  return { matchedIds, unknownTopics: unknown.size, scoreById }
+}
+
+function fileMatchedChains(categoryIndex: CategoryFilingIndex, matchedIds: readonly number[]): FiledChains {
   const categoryIds = new Set<number>()
   const roots: number[] = []
   for (const id of matchedIds) {
-    const chain = categoryIndex.chainById.get(id)
-    if (!chain) {
-      throw new Error(`category ${id} has no ancestor chain`)
-    }
+    const chain = requireChain(categoryIndex, id)
     for (const ancestorId of chain) {
       categoryIds.add(ancestorId)
     }
@@ -99,13 +126,15 @@ export function resolveArticleCategories(
       roots.push(root)
     }
   }
-  const ids = [...categoryIds]
-  return {
-    categoryId: Math.min(...roots),
-    categoryIds: ids,
-    filedCategories: ids.map((categoryId) => ({ categoryId, score: scoreById.get(categoryId) ?? null })),
-    unknownTopics: unknown.size,
+  return { categoryIds: [...categoryIds], roots }
+}
+
+function requireChain(categoryIndex: CategoryFilingIndex, categoryId: number): readonly number[] {
+  const chain = categoryIndex.chainById.get(categoryId)
+  if (!chain) {
+    throw new Error(`category ${categoryId} has no ancestor chain`)
   }
+  return chain
 }
 
 function higherScore(current: number | null | undefined, next: number | null): number | null {
