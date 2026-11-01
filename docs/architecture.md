@@ -44,6 +44,7 @@ NearCrawl is architected as a modern, distributed, edge-native web application. 
 ## 3. Tier-by-Tier Component Breakdown
 
 ### Tier 1: Presentation Layer (`apps/web`)
+The Phase 1 UI is future work. Return to the globe, bookmarks, and the Pages deploy later.
 * Technology: React, TypeScript, Tailwind CSS, Globe.gl (Three.js WebGL canvas).
 * Hosting: Cloudflare Pages.
 * Responsibilities:

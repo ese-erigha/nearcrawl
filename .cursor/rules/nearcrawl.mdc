@@ -9,7 +9,7 @@ Spatial news on a globe. One pnpm workspace. Turborepo runs the apps.
 
 **Runtimes**
 
-- `apps/web` — React + Vite
+- `apps/web` — React + Vite. The Phase 1 UI is future work. Return to the globe, bookmarks, and the Pages deploy only when the user asks in that message.
 - `apps/gateway` — Hono. Node via `@hono/node-server` until it is a Worker
 - `apps/ingestion` — APITube pull and the 14-day purge
 - `apps/inference` — Python FastAPI. Phase 2

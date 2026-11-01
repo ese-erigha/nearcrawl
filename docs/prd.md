@@ -45,7 +45,7 @@ To build a high-performance, cost-optimized spatial intelligence platform across
 
 ## 3. Core Features & User Stories
 
-### Epic 1: Spatial 3D Globe & Heatmap Exploration (Phase 1 MVP)
+### Epic 1: Spatial 3D Globe & Heatmap Exploration (Phase 1 MVP, future work)
 - **US-1.1:** As a user, I want to view a responsive 3D globe with interactive pins and activity heatmaps so that I can visually identify real-time breaking news clusters globally without typing text queries.
 - **US-1.2:** As a user, I want to click any country, region, or city pin—or draw a spatial bounding box—so that I can filter news strictly to that physical area (`BETWEEN lat1 AND lat2`).
 - **US-1.3:** As a user, I want to filter the map by a news category, or by any subcategory under it. The catalog covers APITube's IPTC topics. See [news-categories.md](plans/news-categories.md).
@@ -69,11 +69,11 @@ To build a high-performance, cost-optimized spatial intelligence platform across
 ### 4.1 Stepwise Implementation Phases
 
 PHASE 1: MVP (Serverless Spatial News Foundation)
-├── apps/web — React + Globe.gl 3D canvas on Cloudflare Pages (PWA)
+├── apps/web — React + Globe.gl 3D canvas on Cloudflare Pages (PWA). Future work.
 ├── apps/gateway — auth, bounding-box news query, and article reads
 ├── apps/ingestion — Cloudflare Cron fetches APITube news every 17 minutes and purges the 14-day feed
 ├── Neon PostgreSQL + PostGIS operating a rolling 14-day news window with a spatial index
-└── Local-First IndexedDB implementation for persistent user bookmarks & history
+└── Local-First IndexedDB implementation for persistent user bookmarks and history. Future work.
                          │
                          ▼
 PHASE 2: Intelligence & RAG Synthesis Layer
@@ -158,12 +158,15 @@ nearcrawl/
 ## 7. Stepwise Implementation Milestones
 
 ### Phase 1: MVP (Serverless Spatial News Foundation)
-- [ ] Set up `apps/web` on Cloudflare Pages for the React + Globe.gl PWA.
 - [ ] Create a Neon project with PostGIS and apply a spatial index on the article coordinates.
 - [ ] Deploy `apps/gateway` for auth, the bounding-box news query, and article reads through the Neon HTTP driver.
 - [ ] Deploy `apps/ingestion` to pull APITube `/v1/news/everything` on `INGESTION_INTERVAL_MINUTES` into Neon through the same HTTP driver.
-- [ ] Implement client-side IndexedDB persistence for offline article bookmarking and reading history.
 - [ ] Build the purge in `apps/ingestion`. Delete articles older than `FEED_RETENTION_DAYS`.
+
+### Phase 1 UI (future work)
+Return to this after the backend feed is in use.
+- [ ] Set up `apps/web` on Cloudflare Pages for the React + Globe.gl PWA.
+- [ ] Implement client-side IndexedDB persistence for offline article bookmarking and reading history.
 
 ### Phase 2: RAG Intelligence & Divergence Briefings
 - [ ] Deploy `apps/inference` on a paid Render web service, in the same region as Neon, for LLM orchestration.

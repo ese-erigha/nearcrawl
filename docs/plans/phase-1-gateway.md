@@ -4,7 +4,7 @@ Backend work is two parts. Part 1 is `apps/gateway`. Part 2 is `apps/ingestion`.
 
 Only `apps/ingestion` calls APITube. It pulls `/v1/news/everything` and writes Neon. `apps/gateway` reads that table and seals live queries. The gateway never requests APITube.
 
-`apps/web` stays the shell that is already in the repo. Neither part draws the globe, subscribes from the browser, writes IndexedDB, or initializes `@sentry/react`. The JSON shapes below are the contract that shell will call later.
+`apps/web` stays the shell that is already in the repo. The Phase 1 UI is future work. Return to the globe, the browser subscription, IndexedDB, and `@sentry/react` later. The JSON shapes below are the contract that shell will call later.
 
 The articles SQL is `infra/migrations/0000_create_articles.sql`. The matching Drizzle table is `packages/db/src/schema/articles.ts`. `packages/db/src/client.ts` opens Neon with the HTTP driver. GitHub Actions applies that SQL on a push to `develop`. The gateway reads `articles` only after that migrate job has succeeded.
 
