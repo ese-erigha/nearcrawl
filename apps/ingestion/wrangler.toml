@@ -13,6 +13,7 @@
 # APITUBE_API_KEY is the APITube key. A missing key fails the pull.
 # SENTRY_DSN is the client key for the Sentry project nearcrawl-ingestion.
 # An empty SENTRY_DSN leaves the SDK off. The pull still runs.
+# Wrangler comes from this package's devDependencies. The deploy action uses that binary.
 
 name = "nearcrawl-ingestion"
 main = "src/index.ts"
