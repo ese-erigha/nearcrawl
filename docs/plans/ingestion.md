@@ -50,7 +50,7 @@ NearCrawl ingestion is a Worker, so it follows the ingestion client, not the PWA
 
 ## Pull cron
 
-The pull cron is `*/17 * * * *` in `apps/ingestion/wrangler.toml`. That matches `INGESTION_INTERVAL_MINUTES`. Change the cron and the var together. The handler does not sleep and does not call `setInterval`.
+The pull expression is `*/17 * * * *`. It matches `INGESTION_INTERVAL_MINUTES`. That line is off in `wrangler.toml`. Put it back in `crons` to turn the pull on. Change the cron and the var together. The handler does not sleep and does not call `setInterval`.
 
 One invocation does these steps in order.
 
@@ -168,7 +168,7 @@ The job is `deploy-ingestion` in `.github/workflows/deploy-staging.yml`. A push 
 
 The Worker name is `nearcrawl-ingestion`. The first deploy creates it. Reuse the GitHub secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`. Do not create a Cloudflare account.
 
-The pull cron is on. The purge cron is off until you add `0 0 * * *` back to `crons`.
+The pull cron is off until you add `*/17 * * * *` back to `crons`. The purge cron is off until you add `0 0 * * *` back to `crons`.
 
 Check after the first successful pull:
 
