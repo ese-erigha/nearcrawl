@@ -50,6 +50,14 @@ describe('upsertArticlesSql', () => {
     assert.equal(compiled.sql.includes('ingested_at'), false)
     assert.equal(compiled.sql.includes('now()'), false)
   })
+
+  it('when a page is written, then latitude, the time, and the breaking flag keep their column types', () => {
+    const compiled = compileSql(upsertArticlesSql([article]))
+
+    assert.match(compiled.sql, /::float8/)
+    assert.match(compiled.sql, /::timestamptz/)
+    assert.match(compiled.sql, /::boolean/)
+  })
 })
 
 describe('purgeArticlesSql', () => {
