@@ -98,6 +98,20 @@ describe('listNewsPage', () => {
     assert.equal(apiKey, 'test-key')
   })
 
+  it('when the client requests a page, then the search is limited to English', async (t) => {
+    const original = globalThis.fetch
+    t.after(() => {
+      globalThis.fetch = original
+    })
+    let href = ''
+    globalThis.fetch = async (input) => {
+      href = String(input)
+      return Response.json({ results: [], has_next_pages: false })
+    }
+    await runWithConfig(config, () => listNewsPage(1))
+    assert.equal(new URL(href).searchParams.get('language.code'), 'en')
+  })
+
   it('when APITube responds with an error status, then the client throws', async (t) => {
     const original = globalThis.fetch
     t.after(() => {

@@ -1,6 +1,7 @@
 import { DAY_MS, getIngestionConfig } from '../config.ts'
 
 const APITUBE_URL = 'https://api.apitube.io/v1/news/everything'
+const ARTICLE_LANGUAGE = 'en'
 const IPTC_MEDIATOPICS = 'iptc_mediatopics'
 
 export type NewsTopic = {
@@ -111,6 +112,7 @@ function newsUrl(page: number, retentionDays: number): URL {
   url.searchParams.set('sort.by', 'published_at')
   url.searchParams.set('sort.order', 'desc')
   url.searchParams.set('published_at.start', publishedAfter.toISOString())
+  url.searchParams.set('language.code', ARTICLE_LANGUAGE)
   return url
 }
 
