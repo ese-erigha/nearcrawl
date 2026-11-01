@@ -7,11 +7,16 @@ import type { NewsItem, NewsPage, NewsTopic } from './apitube.client.ts'
 const batches: Array<Array<{ apitubeId: string; categoryId: number; categoryIds: number[] }>> = []
 const inserts: Array<{ name: string; parentId: number; medtopId: string }> = []
 const calls: number[] = []
+const knownIds = new Set<string>()
 let pages: NewsPage[] = []
 
 mock.module('db', {
   namedExports: {
     DbArticleRepository: class {
+      listExistingApitubeIds(apitubeIds: readonly string[]) {
+        return Promise.resolve(apitubeIds.filter((apitubeId) => knownIds.has(apitubeId)))
+      }
+
       upsertByApitubeIds(articles: Array<{ apitubeId: string; categoryId: number; categoryIds: number[] }>) {
         batches.push(articles)
         return Promise.resolve()
@@ -85,6 +90,7 @@ function reset(): void {
   batches.length = 0
   inserts.length = 0
   calls.length = 0
+  knownIds.clear()
   pages = []
 }
 
@@ -222,5 +228,33 @@ describe('pullNews', () => {
     assert.deepEqual(batches, [])
     assert.equal(counts.upserted, 0)
     assert.equal(counts.skipped, 0)
+  })
+
+  it('when every id on the page was already stored, then the pull does not request the next page', async () => {
+    reset()
+    knownIds.add('abc')
+    pages = [
+      { items: [item()], dropped: 0, hasNextPage: true },
+      { items: [item({ apitubeId: 'def' })], dropped: 0, hasNextPage: false },
+    ]
+    await runWithConfig(config, () => pullNews())
+    assert.deepEqual(calls, [1])
+    assert.equal(batches.length, 1)
+    assert.equal(batches[0]?.[0]?.apitubeId, 'abc')
+  })
+
+  it('when one id on the page is absent, then the pull requests the next page', async () => {
+    reset()
+    knownIds.add('abc')
+    pages = [
+      {
+        items: [item(), item({ apitubeId: 'def', medtopIds: ['medtop:01000000'] })],
+        dropped: 0,
+        hasNextPage: true,
+      },
+      { items: [item()], dropped: 0, hasNextPage: false },
+    ]
+    await runWithConfig(config, () => pullNews())
+    assert.deepEqual(calls, [1, 2])
   })
 })

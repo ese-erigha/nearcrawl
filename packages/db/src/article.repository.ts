@@ -1,6 +1,7 @@
 import {
   articleByIdSql,
   categoryArticlesSql,
+  existingApitubeIdsSql,
   purgeArticlesSql,
   spatialNewsSql,
   upsertArticlesSql,
@@ -73,6 +74,14 @@ export class DbArticleRepository {
 
   async listByCategory(categoryId: number, limit: number): Promise<ArticleRow[]> {
     return this.read(categoryArticlesSql(categoryId, limit), false)
+  }
+
+  async listExistingApitubeIds(apitubeIds: readonly string[]): Promise<string[]> {
+    if (apitubeIds.length === 0) {
+      return []
+    }
+    const result = await this.db.execute(existingApitubeIdsSql(apitubeIds))
+    return result.rows.map((record) => String((record as { apitube_id: unknown }).apitube_id))
   }
 
   async upsertByApitubeIds(articles: readonly UpsertArticle[]): Promise<void> {

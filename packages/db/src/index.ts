@@ -2,6 +2,7 @@ export {
   articleByIdSql,
   categoryArticlesSql,
   compileSql,
+  existingApitubeIdsSql,
   purgeArticlesSql,
   spatialNewsSql,
   upsertArticleSql,

@@ -31,7 +31,7 @@ type PageCounts = {
   unknownTopics: number
 }
 
-/** Pull news pages until a page is empty, has no next page, or is older than the feed window. */
+/** Pull news pages until a page is empty, has no next page, is older than the feed window, or is already stored. */
 export async function pullNews(): Promise<PullCounts> {
   const config = getIngestionConfig()
   const categoryRepository = new DbCategoryRepository(config.databaseUrl)
@@ -43,6 +43,8 @@ export async function pullNews(): Promise<PullCounts> {
   let page = 1
   while (page <= config.maxPages) {
     const newsPage = await listNewsPage(page)
+    const pageIds = newsPage.items.map((item) => item.apitubeId)
+    const storedIds = await articleRepository.listExistingApitubeIds(pageIds)
     const pageCounts = await processBatch(newsPage.items, categoryIndex, categoryRepository, articleRepository, cutoff)
     pullCounts.pulled += newsPage.items.length + newsPage.dropped
     pullCounts.upserted += pageCounts.upserted
@@ -50,7 +52,8 @@ export async function pullNews(): Promise<PullCounts> {
     pullCounts.unknownTopics += pageCounts.unknownTopics
     const pageWasEmpty = newsPage.items.length + newsPage.dropped === 0
     const pageWasOld = newsPage.items.length > 0 && pageCounts.inWindow === 0
-    if (pageWasEmpty || !newsPage.hasNextPage || pageWasOld) {
+    const pageWasKnown = pageIds.length > 0 && pageIds.every((id) => storedIds.includes(id))
+    if (pageWasEmpty || !newsPage.hasNextPage || pageWasOld || pageWasKnown) {
       return pullCounts
     }
     page += 1

@@ -1,7 +1,15 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 
-import { compileSql, purgeArticlesSql, spatialNewsSql, upsertArticlesSql, type UpsertArticle } from './articles.sql.ts'
+import { DbArticleRepository } from './article.repository.ts'
+import {
+  compileSql,
+  existingApitubeIdsSql,
+  purgeArticlesSql,
+  spatialNewsSql,
+  upsertArticlesSql,
+  type UpsertArticle,
+} from './articles.sql.ts'
 
 const article: UpsertArticle = {
   apitubeId: 'abc',
@@ -57,6 +65,22 @@ describe('upsertArticlesSql', () => {
     assert.match(compiled.sql, /::float8/)
     assert.match(compiled.sql, /::timestamptz/)
     assert.match(compiled.sql, /::boolean/)
+  })
+})
+
+describe('existingApitubeIdsSql', () => {
+  it('when apitube ids are listed, then the statement selects the stored ids', () => {
+    const compiled = compileSql(existingApitubeIdsSql(['abc', 'def']))
+
+    assert.match(compiled.sql, /SELECT apitube_id FROM articles WHERE apitube_id IN/)
+    assert.equal(compiled.params.includes('abc'), true)
+    assert.equal(compiled.params.includes('def'), true)
+  })
+
+  it('when the id list is empty, then listExistingApitubeIds does not query', async () => {
+    const repository = new DbArticleRepository('postgres://local/test')
+    const ids = await repository.listExistingApitubeIds([])
+    assert.deepEqual(ids, [])
   })
 })
 

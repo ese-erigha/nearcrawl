@@ -162,6 +162,14 @@ export function upsertArticlesSql(articles: readonly UpsertArticle[]): SQL {
   `
 }
 
+export function existingApitubeIdsSql(apitubeIds: readonly string[]): SQL {
+  const ids = sql.join(
+    apitubeIds.map((apitubeId) => sql`${apitubeId}`),
+    sql`, `,
+  )
+  return sql`SELECT apitube_id FROM articles WHERE apitube_id IN (${ids})`
+}
+
 export function purgeArticlesSql(retentionDays: number): SQL {
   return sql`
     DELETE FROM articles
