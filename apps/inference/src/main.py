@@ -89,6 +89,7 @@ def _install_errors(app: FastAPI) -> None:
 
 
 def _install_routes(app: FastAPI) -> None:
+    # Render health checks call GET /health. A request for / returns 404.
     @app.get("/health")
     async def health() -> dict[str, str]:
         return {"status": "ok"}
