@@ -6,6 +6,8 @@ import { createConfig, readBindings } from './config.ts'
 import articlesController from './domain/articles/articles.controller.ts'
 import spatialNewsController from './domain/articles/spatial-news.controller.ts'
 import categoriesController from './domain/categories/categories.controller.ts'
+import searchController from './domain/search/search.controller.ts'
+import storiesController from './domain/stories/stories.controller.ts'
 import { reportUnhappyStatus } from './lib/errors.ts'
 import { sentryOptions } from './lib/sentry.ts'
 import { healthRoutes } from './routes/health.routes.ts'
@@ -30,5 +32,7 @@ app.route('/health', healthRoutes)
 app.route('/api/categories', categoriesController)
 app.route('/api/spatial/news', spatialNewsController)
 app.route('/api/articles', articlesController)
+app.route('/api/stories', storiesController)
+app.route('/api/search', searchController)
 
 export default app

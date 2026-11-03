@@ -21,6 +21,12 @@ const geographyPoint = customType<{ data: string }>({
   },
 })
 
+const searchVector = customType<{ data: string }>({
+  dataType() {
+    return 'tsvector'
+  },
+})
+
 export const articles = pgTable(
   'articles',
   {
@@ -56,11 +62,15 @@ export const articles = pgTable(
     wordsCount: integer('words_count'),
     sourceRank: integer('source_rank'),
     storyId: text('story_id'),
+    searchVector: searchVector('search_vector').generatedAlwaysAs(
+      sql`to_tsvector('english', coalesce(title, '') || ' ' || coalesce(description, '') || ' ' || coalesce(array_to_string(tags, ' '), ''))`,
+    ),
     ingestedAt: timestamp('ingested_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
     uniqueIndex('articles_apitube_id_key').on(table.apitubeId),
     index('articles_location_gix').using('gist', table.location),
+    index('articles_search_vector_idx').using('gin', table.searchVector),
     index('articles_lat_lng_idx').on(table.latitude, table.longitude),
     index('articles_published_at_idx').on(table.publishedAt),
     index('articles_category_published_at_idx').on(table.categoryId, table.publishedAt.desc()),

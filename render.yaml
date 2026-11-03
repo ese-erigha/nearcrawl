@@ -1,0 +1,45 @@
+services:
+  - type: web
+    name: nearcrawl-inference
+    runtime: python
+    branch: develop
+    rootDir: apps/inference
+    region: ohio
+    plan: 0.5c-512mb
+    numInstances: 1
+    autoDeployTrigger: off
+    healthCheckPath: /health
+    maxShutdownDelaySeconds: 120
+    buildCommand: curl -LsSf https://astral.sh/uv/install.sh | sh && $HOME/.local/bin/uv sync --frozen --no-dev
+    startCommand: .venv/bin/uvicorn src.main:app --host 0.0.0.0 --port $PORT
+    buildFilter:
+      paths:
+        - apps/inference/**
+        - render.yaml
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.13"
+      - key: SENTRY_ENVIRONMENT
+        value: production
+      - key: FEED_RETENTION_DAYS
+        value: "14"
+      - key: BRIEF_ARTICLE_CAP
+        value: "12"
+      - key: BRIEF_BODY_CHARS
+        value: "2000"
+      - key: OPENROUTER_BASE_URL
+        value: https://openrouter.ai/api/v1
+      - key: OPENROUTER_MODEL
+        value: openai/gpt-4.1-mini
+      - key: GEOAPIFY_BASE_URL
+        value: https://api.geoapify.com/v1/geocode/search
+      - key: DATABASE_URL
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: GEOAPIFY_API_KEY
+        sync: false
+      - key: INFERENCE_SECRET
+        sync: false
+      - key: SENTRY_DSN
+        sync: false

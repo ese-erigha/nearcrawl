@@ -3,6 +3,7 @@ import { Hono } from 'hono'
 import { handleErrors } from '../../lib/errors.ts'
 import type { ControllerContext } from '../../types.ts'
 import { articleIdSchema, hotNewsQuerySchema } from './articles.schema.ts'
+import { explainArticle } from './usecases/explain-article.usecase.ts'
 import { getArticle } from './usecases/get-article.usecase.ts'
 import { listHotNews } from './usecases/list-hot-news.usecase.ts'
 import { sealArticle } from './usecases/seal-article.usecase.ts'
@@ -33,6 +34,14 @@ app.post(
     const id = articleIdSchema.parse(c.req.param('id'))
     const response = await sealArticle(id)
     return c.json(response)
+  }),
+)
+
+app.post(
+  '/:id/explanation',
+  handleErrors(async (c) => {
+    const id = articleIdSchema.parse(c.req.param('id'))
+    return explainArticle(id)
   }),
 )
 

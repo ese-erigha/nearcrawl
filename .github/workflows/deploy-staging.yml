@@ -103,7 +103,7 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm turbo run lint typecheck test build
+      - run: pnpm turbo run lint typecheck test build --filter=!inference
 
   migrate:
     runs-on: ubuntu-latest

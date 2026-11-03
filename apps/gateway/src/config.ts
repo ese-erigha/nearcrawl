@@ -13,6 +13,8 @@ export interface GatewayBindings {
   CATEGORY_ARTICLES_CAP?: string
   FEED_RETENTION_DAYS?: string
   HOT_NEWS_CAP?: string
+  INFERENCE_URL?: string
+  INFERENCE_SECRET?: string
 }
 
 export interface AppConfig {
@@ -26,6 +28,8 @@ export interface AppConfig {
   categoryArticlesCap: number
   feedRetentionDays: number
   hotNewsCap: number
+  inferenceUrl: string
+  inferenceSecret: string
 }
 
 export function readBindings(raw: unknown): GatewayBindings {
@@ -45,6 +49,8 @@ export function readBindings(raw: unknown): GatewayBindings {
     CATEGORY_ARTICLES_CAP: textValue(env.CATEGORY_ARTICLES_CAP),
     FEED_RETENTION_DAYS: textValue(env.FEED_RETENTION_DAYS),
     HOT_NEWS_CAP: textValue(env.HOT_NEWS_CAP),
+    INFERENCE_URL: textValue(env.INFERENCE_URL),
+    INFERENCE_SECRET: textValue(env.INFERENCE_SECRET),
   }
 }
 
@@ -72,6 +78,10 @@ const gatewayConfigSchema = z
     CATEGORY_ARTICLES_CAP: positiveInt('CATEGORY_ARTICLES_CAP'),
     FEED_RETENTION_DAYS: positiveInt('FEED_RETENTION_DAYS'),
     HOT_NEWS_CAP: positiveInt('HOT_NEWS_CAP'),
+    INFERENCE_URL: requiredText('INFERENCE_URL').refine(isInferenceOrigin, {
+      error: 'INFERENCE_URL is an origin with no path',
+    }),
+    INFERENCE_SECRET: requiredText('INFERENCE_SECRET'),
   })
   .refine((value) => value.CATEGORY_ARTICLES_DEFAULT <= value.CATEGORY_ARTICLES_CAP, {
     error: 'CATEGORY_ARTICLES_DEFAULT exceeds CATEGORY_ARTICLES_CAP',
@@ -91,6 +101,18 @@ export function createConfig(raw: unknown): AppConfig {
     categoryArticlesCap: data.CATEGORY_ARTICLES_CAP,
     feedRetentionDays: data.FEED_RETENTION_DAYS,
     hotNewsCap: data.HOT_NEWS_CAP,
+    inferenceUrl: data.INFERENCE_URL,
+    inferenceSecret: data.INFERENCE_SECRET,
+  }
+}
+
+function isInferenceOrigin(value: string): boolean {
+  try {
+    const url = new URL(value)
+    const isHttp = url.protocol === 'http:' || url.protocol === 'https:'
+    return isHttp && url.pathname === '/' && url.search === '' && url.hash === ''
+  } catch {
+    return false
   }
 }
 

@@ -1,0 +1,50 @@
+name: Deploy Inference
+
+on:
+  push:
+    branches:
+      - develop
+    paths:
+      - "apps/inference/**"
+      - "render.yaml"
+      - ".github/workflows/deploy-inference.yml"
+  workflow_dispatch:
+    inputs:
+      force_deploy:
+        description: "Deploy the inference service?"
+        required: true
+        type: boolean
+        default: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    name: Lint, typecheck, and test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.13"
+      - name: Install dependencies
+        working-directory: apps/inference
+        run: uv sync --frozen
+      - name: Lint
+        working-directory: apps/inference
+        run: uv run ruff check src tests
+      - name: Typecheck
+        working-directory: apps/inference
+        run: uv run pyright
+      - name: Test
+        working-directory: apps/inference
+        run: uv run pytest
+
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy Render service
+    needs: test
+    if: github.ref == 'refs/heads/develop' && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.force_deploy))
+    steps:
+      - name: Call the deploy hook
+        env:
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: curl --fail --silent --show-error --request POST "$RENDER_DEPLOY_HOOK_URL"

@@ -23,6 +23,8 @@ const testEnv = {
   NEON_REALTIME_SECRET: 'local-secret',
   SENTRY_DSN: 'https://local@sentry.test/1',
   SENTRY_ENVIRONMENT: 'test',
+  INFERENCE_URL: 'http://127.0.0.1:8000',
+  INFERENCE_SECRET: 'local-inference-secret',
 }
 
 function request(path: string, init?: RequestInit) {
