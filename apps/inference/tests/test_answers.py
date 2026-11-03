@@ -85,13 +85,6 @@ def citation_ids(body: str) -> set[str]:
     return ids
 
 
-async def test_when_the_environment_is_test_then_the_sentry_debug_route_returns_404(
-    client: AsyncClient,
-) -> None:
-    response = await client.get("/debug-sentry")
-    assert response.status_code == 404
-
-
 async def test_when_the_health_route_is_called_then_the_body_is_ok(client: AsyncClient) -> None:
     response = await client.get("/health")
     assert response.status_code == 200

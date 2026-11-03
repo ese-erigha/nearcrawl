@@ -94,12 +94,6 @@ def _install_routes(app: FastAPI) -> None:
     async def health() -> dict[str, str]:
         return {"status": "ok"}
 
-    @app.get("/debug-sentry")
-    async def debug_sentry() -> None:
-        if get_config().sentry_environment == "test":
-            raise NotFoundError("Not found")
-        raise RuntimeError("Sentry test")
-
     @app.post("/explanations")
     async def explanations(body: ExplanationBody, request: Request) -> StreamingResponse:
         require_bearer(request)
