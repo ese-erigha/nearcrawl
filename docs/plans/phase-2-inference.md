@@ -33,14 +33,24 @@ The last ` in ` splits the query. `supply chain in East Asia` sends `East Asia` 
 The search page shows `Powered by Geoapify` and links that text to Geoapify. It also shows `OpenStreetMap` and links that text to `https://www.openstreetmap.org/copyright`. That page stays later work.
 
 ```sql
+-- array_to_string is stable. A generated column needs an immutable expression.
+CREATE FUNCTION immutable_array_to_string(items text[], separator text)
+RETURNS text
+LANGUAGE sql
+IMMUTABLE
+PARALLEL SAFE
+AS $$
+  SELECT array_to_string(items, separator)
+$$;
+
 ALTER TABLE articles
   ADD COLUMN search_vector tsvector
   GENERATED ALWAYS AS (
     to_tsvector(
-      'english',
+      'english'::regconfig,
       coalesce(title, '') || ' ' ||
       coalesce(description, '') || ' ' ||
-      coalesce(array_to_string(tags, ' '), '')
+      coalesce(immutable_array_to_string(tags, ' '), '')
     )
   ) STORED;
 

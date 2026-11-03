@@ -63,7 +63,7 @@ export const articles = pgTable(
     sourceRank: integer('source_rank'),
     storyId: text('story_id'),
     searchVector: searchVector('search_vector').generatedAlwaysAs(
-      sql`to_tsvector('english', coalesce(title, '') || ' ' || coalesce(description, '') || ' ' || coalesce(array_to_string(tags, ' '), ''))`,
+      sql`to_tsvector('english'::regconfig, coalesce(title, '') || ' ' || coalesce(description, '') || ' ' || coalesce(immutable_array_to_string(tags, ' '), ''))`,
     ),
     ingestedAt: timestamp('ingested_at', { withTimezone: true }).notNull().defaultNow(),
   },
