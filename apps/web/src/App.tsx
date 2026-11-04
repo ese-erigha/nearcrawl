@@ -1,17 +1,18 @@
-import { GlobeCanvas } from './components/GlobeCanvas.tsx'
-import { SideDrawer } from './components/SideDrawer.tsx'
+import { Navigate, Route, Routes } from 'react-router-dom'
 
-export default function App() {
+import { DailyBriefScreen } from './screens/daily-brief-screen.tsx'
+import { MapScreen } from './screens/map-screen.tsx'
+import { AppShell } from './shell/app-shell.tsx'
+import { PATH } from './shell/navigation.constants.ts'
+
+export function App() {
   return (
-    <div className="flex min-h-svh flex-col bg-slate-950 text-slate-100">
-      <header className="flex items-baseline justify-between gap-4 px-5 py-4">
-        <h1 className="text-lg font-semibold tracking-tight">NearCrawl</h1>
-        <p className="text-sm text-slate-400">Spatial news</p>
-      </header>
-      <main className="grid min-h-0 flex-1 content-start gap-4 px-5 pb-5 md:grid-cols-[minmax(0,1fr)_20rem] md:content-stretch">
-        <GlobeCanvas />
-        <SideDrawer />
-      </main>
-    </div>
+    <Routes>
+      <Route element={<AppShell />}>
+        <Route path={PATH.MAP} element={<MapScreen />} />
+        <Route path={PATH.BRIEF} element={<DailyBriefScreen />} />
+        <Route path="*" element={<Navigate to={PATH.MAP} replace />} />
+      </Route>
+    </Routes>
   )
 }

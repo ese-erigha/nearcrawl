@@ -9,11 +9,16 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "typecheck": "tsc -b --pretty false",
-    "test": "node --test src/services/bookmarks.test.ts src/services/history.test.ts"
+    "test": "node --test src/services/bookmarks.test.ts src/services/history.test.ts src/fixtures/home.fixture.test.ts src/map/globe-math.test.ts"
   },
   "dependencies": {
+    "@fontsource-variable/hubot-sans": "^5.3.0",
+    "@fontsource-variable/mona-sans": "^5.3.0",
+    "@fontsource/martian-mono": "^5.3.0",
+    "@phosphor-icons/react": "^2.1.10",
     "react": "^19.3.1",
-    "react-dom": "^19.3.1"
+    "react-dom": "^19.3.1",
+    "react-router-dom": "^7.18.5"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.2.2",

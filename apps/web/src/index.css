@@ -1,1 +1,82 @@
-@import "tailwindcss";
+@import 'tailwindcss';
+
+@theme {
+  --color-space: #050505;
+  --color-surface: #111111;
+  --color-surface-2: #191919;
+  --color-hairline: #303030;
+  --color-ink: #f2f2f2;
+  --color-ink-2: #c7c7c7;
+  --color-ink-3: #a3a3a3;
+  --color-ink-4: #8c8c8c;
+  --color-breaking: #ff4a3d;
+  --color-reported: #ffb547;
+  --font-sans: 'Mona Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Hubot Sans', 'Mona Sans', ui-sans-serif, sans-serif;
+  --font-mono: 'Martian Mono', ui-monospace, monospace;
+}
+
+@utility font-semicondensed {
+  font-family: var(--font-display);
+  font-variation-settings: 'wdth' 87.5;
+}
+
+@utility font-condensed {
+  font-family: var(--font-display);
+  font-variation-settings: 'wdth' 75;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  background: #050505;
+  color: #f2f2f2;
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+@keyframes ticker-slide {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.ticker-track {
+  animation: ticker-slide var(--ticker-duration, 40s) linear infinite;
+}
+
+.ticker:hover .ticker-track,
+.ticker:focus-within .ticker-track {
+  animation-play-state: paused;
+}
+
+.ticker-mask {
+  mask-image: linear-gradient(90deg, transparent 0, #000 28px, #000 calc(100% - 40px), transparent 100%);
+}
+
+@keyframes live-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgb(255 74 61 / 0.55);
+  }
+  70% {
+    box-shadow: 0 0 0 7px rgb(255 74 61 / 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgb(255 74 61 / 0);
+  }
+}
+
+.live-dot {
+  animation: live-pulse 2s cubic-bezier(0.23, 1, 0.32, 1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ticker-track,
+  .live-dot {
+    animation: none;
+  }
+}

@@ -9,7 +9,7 @@ Spatial news on a globe. One pnpm workspace. Turborepo runs the apps.
 
 **Runtimes**
 
-- `apps/web` — React + Vite. The Phase 1 UI is future work. Return to the globe, bookmarks, and the Pages deploy only when the user asks in that message.
+- `apps/web` — React + Vite, built for Cloudflare Pages. Screens render fixtures until a screen calls the gateway.
 - `apps/gateway` — Hono. Node via `@hono/node-server` until it is a Worker
 - `apps/ingestion` — APITube pull and the 14-day purge
 - `apps/inference` — Python FastAPI. Phase 2
@@ -82,7 +82,7 @@ app.post('/api/articles/:id/live', ...)
 - **Names state the action.** `getLiveQuerySealer` seals a SQL string. Do not name a function `getRealtime`, `process`, or `handle` when the action has a specific name.
 - **Call inputs** — pass data. The callee calls `fetch`, Neon, or a repository. Do not pass a function so the callee can write a row or replace `fetch`. `handleErrors` may take a function. That wrapper's job is to run it.
 - **Straight-line calls** — one `await` per statement. Name the result, then pass that name.
-- **`apps/web` components** — a screen composes feature components. A second visual piece (header, list, drawer section) gets its own file in the same folder. Name the file for the piece.
+- **`apps/web`** — A screen in `src/screens` composes feature components. A second visual piece (header, list, row, dock, ticker) gets its own file in the feature folder. Name the file for the piece. Route paths live in one `as const` object. Sample rows live in `src/fixtures`. A fixture screen does not call the gateway, Render, or a vendor. Cloudflare Pages serves the Vite `dist`. `public/_redirects` sends every path to `index.html`, so a refresh keeps the client route.
 - **Env** — required secrets are validated. No silent fallback for `DATABASE_URL`, `NEON_REALTIME_SECRET`, or `SENTRY_AUTH_TOKEN`. An empty Sentry DSN disables the SDK. Do not commit DSNs or tokens.
 - **Sentry** — a 2xx sends nothing. A 4xx is a warning log. A 5xx is an error log and an Issue.
 
