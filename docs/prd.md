@@ -86,7 +86,7 @@ PHASE 2: Intelligence & RAG Synthesis Layer
 PHASE 3: Two-Stage Machine Learning Personalization
 ├── Redis feature store tracking user interaction signals (clicks, dwell time, skips)
 ├── Cloud database sync (`user_bookmarks` snapshot table) for cross-device state, served by apps/gateway
-└── apps/inference/recsys — LightGBM Learning-to-Rank (LTR) re-ranking
+└── apps/inference ordering — LightGBM re-rank of the pins in view
 
 ### 4.2 Data Storage & Lifecycle Strategy
 - **Active News Feed (Neon PostgreSQL + PostGIS):** Stores incoming APITube news items. Operates on a rolling window. `apps/ingestion` purges articles older than `FEED_RETENTION_DAYS` in `apps/ingestion/wrangler.toml`.
@@ -148,7 +148,7 @@ nearcrawl/
 │       ├── package.json              # scripts call uv
 │       ├── pyproject.toml
 │       ├── evals/                    # DeepEval / Ragas. Not a deployed app.
-│       └── recsys/                   # Phase 3 ranker.
+│       └── ordering/                 # Phase 3 pin order.
 └── infra/
     └── migrations/                   # Neon schema
 ```
@@ -178,4 +178,4 @@ Return to this after the backend feed is in use.
 - [ ] Implement explicit interest onboarding modal to handle the Cold Start Problem.
 - [ ] Set up Redis interaction logger tracking implicit clickstream signals (clicks, dwell time, skips).
 - [ ] Deploy `user_bookmarks` database sync table for cross-device bookmarking.
-- [ ] Train and deploy the LightGBM Learning-to-Rank (LTR) pipeline in `apps/inference/recsys`.
+- [ ] Train and deploy the LightGBM pin order in `apps/inference/src/ordering`.
