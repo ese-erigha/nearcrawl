@@ -1,15 +1,19 @@
 import { X } from '@phosphor-icons/react'
 
-import { CATEGORY_LABEL, type Story } from '../fixtures/home.fixture.ts'
+import { articleAge, articleCountry, articleTopic, type Article } from '../fixtures/home.fixture.ts'
 
 type StoryPanelProps = {
-  story: Story
+  story: Article
   onClose: () => void
 }
 
 export function StoryPanel({ story, onClose }: StoryPanelProps) {
-  const typeLabel = story.isBreaking ? 'Breaking' : CATEGORY_LABEL[story.category]
-  const facts = [story.country, CATEGORY_LABEL[story.category], story.sourceName, `${story.ageLabel} ago`]
+  const topic = articleTopic(story)
+  const typeLabel = story.isBreaking ? 'Breaking' : topic
+  const country = articleCountry(story)
+  const age = articleAge(story)
+  const facts = [country, topic, story.sourceName, `${age} ago`]
+  if (story.readTimeMinutes) facts.push(`${story.readTimeMinutes} min`)
 
   return (
     <aside
@@ -33,7 +37,7 @@ export function StoryPanel({ story, onClose }: StoryPanelProps) {
             <h2 className="font-semicondensed text-[22px] leading-[1.1] font-bold tracking-[-0.01em] text-ink">
               {story.title}
             </h2>
-            <p className="mt-1 truncate text-[13px] text-ink-3">{story.country}</p>
+            <p className="mt-1 truncate text-[13px] text-ink-3">{country}</p>
           </div>
         </div>
         <div className="mt-5">
@@ -48,10 +52,10 @@ export function StoryPanel({ story, onClose }: StoryPanelProps) {
             {typeLabel}
           </span>
           <p className="mt-2 text-[13px] leading-snug text-ink-3">
-            {story.isBreaking ? 'Breaking.' : `${typeLabel}.`} Reported {story.ageLabel} ago.
+            {story.isBreaking ? 'Breaking.' : `${typeLabel}.`} Reported {age} ago.
           </p>
         </div>
-        <p className="mt-5 text-[15px] leading-relaxed text-ink-2">{story.description}</p>
+        <p className="mt-5 text-[15px] leading-relaxed text-ink-2">{story.body}</p>
         <div className="mt-4 flex flex-wrap gap-1.5">
           {facts.map((fact) => (
             <span
@@ -62,7 +66,10 @@ export function StoryPanel({ story, onClose }: StoryPanelProps) {
             </span>
           ))}
         </div>
-        <p className="mt-6 border-t border-white/6 pt-4 text-[12px] text-ink-4">Source · {story.sourceName}</p>
+        <p className="mt-6 border-t border-white/6 pt-4 text-[12px] text-ink-4">
+          Source · {story.sourceName}
+          {story.authorName ? ` · ${story.authorName}` : ''}
+        </p>
       </div>
     </aside>
   )

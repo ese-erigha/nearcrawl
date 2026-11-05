@@ -32,7 +32,8 @@ const row: ArticleRow = {
   read_time_minutes: null,
   words_count: null,
   source_rank: null,
-  country_codes: [],
+  story_id: null,
+  country_codes: ['SG'],
 }
 
 mock.module('../articles.repository.ts', {
@@ -53,7 +54,7 @@ mock.module('../../../lib/context.ts', {
 const { listSpatialNews } = await import('./list-spatial-news.usecase.ts')
 
 describe('listSpatialNews', () => {
-  it('when a row is in the box, then the response is a pin', async () => {
+  it('when a row is in the box, then the response includes the article body', async () => {
     const response = await listSpatialNews({
       bbox: { west: 103, south: 1, east: 104, north: 2 },
     })
@@ -61,7 +62,9 @@ describe('listSpatialNews', () => {
     assert.equal(response.truncated, false)
     assert.equal(response.articles[0]?.sourceName, 'Harbor Desk')
     assert.equal(response.articles[0]?.publishedAt, '2026-10-26T12:00:00.000Z')
-    assert.equal('body' in (response.articles[0] ?? {}), false)
+    assert.equal(response.articles[0]?.body, 'The port stopped night traffic after the channel was closed.')
+    assert.deepEqual(response.articles[0]?.countryCodes, ['SG'])
+    assert.equal(response.articles[0]?.storyId, null)
   })
 
   it('when the spatial read runs, then the card field is description', async () => {

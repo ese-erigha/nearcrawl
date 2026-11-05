@@ -1,12 +1,12 @@
 import { NotFoundError } from '../../../lib/errors.ts'
-import { mapArticlePin, type ArticlePin } from '../../articles/articles.mappers.ts'
+import { mapArticle, type Article } from '../../articles/articles.mappers.ts'
 import { getArticleRepository } from '../../articles/articles.repository.ts'
 import { getCategoryRepository } from '../categories.repository.ts'
 
 export async function listCategoryArticles(
   id: number,
   limit: number,
-): Promise<{ articles: ArticlePin[] }> {
+): Promise<{ articles: Article[] }> {
   const categories = getCategoryRepository()
   const detail = await categories.findWithChildren(id)
   if (!detail) {
@@ -14,5 +14,5 @@ export async function listCategoryArticles(
   }
   const articles = getArticleRepository()
   const rows = await articles.listByCategory(id, limit)
-  return { articles: rows.map(mapArticlePin) }
+  return { articles: rows.map(mapArticle) }
 }

@@ -1,7 +1,7 @@
-import type { Story } from '../fixtures/home.fixture.ts'
+import { articleAge, type Article } from '../fixtures/home.fixture.ts'
 
 type BriefStoryProps = {
-  story: Story
+  story: Article
 }
 
 export function BriefStory({ story }: BriefStoryProps) {
@@ -10,7 +10,7 @@ export function BriefStory({ story }: BriefStoryProps) {
       <h3 className="text-lg font-medium text-ink">{story.title}</h3>
       <p className="mt-2 max-w-2xl text-sm leading-6 text-ink-2">{story.description}</p>
       <p className="mt-3 font-mono text-[10px] tracking-wide text-ink-4 uppercase">
-        {story.sourceName} · {story.ageLabel}
+        {story.sourceName} · {articleAge(story)}
       </p>
     </article>
   )

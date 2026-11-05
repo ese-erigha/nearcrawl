@@ -1,8 +1,8 @@
-import { listGlobalBreaking, type Story } from '../fixtures/home.fixture.ts'
+import { articleAge, listGlobalBreaking, type Article } from '../fixtures/home.fixture.ts'
 
 const STORIES = listGlobalBreaking()
 
-function StoryRun({ stories, hidden }: { stories: Story[]; hidden?: boolean }) {
+function StoryRun({ stories, hidden }: { stories: Article[]; hidden?: boolean }) {
   return (
     <ul className="flex shrink-0 items-center pl-1" aria-hidden={hidden || undefined} aria-label={hidden ? undefined : 'Global breaking stories'}>
       {stories.map((story) => (
@@ -10,7 +10,7 @@ function StoryRun({ stories, hidden }: { stories: Story[]; hidden?: boolean }) {
           <span className="flex h-8 items-center gap-2 px-2.5 whitespace-nowrap">
             <span className="text-[11.5px] font-medium text-breaking">Breaking</span>
             <span className="text-[13px] font-medium text-ink">{story.title}</span>
-            <span className="text-[11.5px] text-ink-4">{story.ageLabel}</span>
+            <span className="text-[11.5px] text-ink-4">{articleAge(story)}</span>
           </span>
           <span className="mx-1 h-3 w-px bg-white/10" aria-hidden />
         </li>

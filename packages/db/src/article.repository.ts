@@ -61,6 +61,7 @@ export type ArticleRow = {
   read_time_minutes: number | null
   words_count: number | null
   source_rank: number | null
+  story_id: string | null
   country_codes: string[]
 }
 
@@ -81,7 +82,6 @@ export class DbArticleRepository {
         categoryId: query.categoryId ?? null,
         limit: query.limit + 1,
       }),
-      false,
     )
     const truncated = records.length > query.limit
     const rows = truncated ? records.slice(0, query.limit) : records
@@ -89,12 +89,12 @@ export class DbArticleRepository {
   }
 
   async findById(id: string): Promise<ArticleRow | null> {
-    const records = await this.read(articleByIdSql(id), true)
+    const records = await this.read(articleByIdSql(id))
     return records[0] ?? null
   }
 
   async listByCategory(categoryId: number, limit: number): Promise<ArticleRow[]> {
-    return this.read(categoryArticlesSql(categoryId, limit), false)
+    return this.read(categoryArticlesSql(categoryId, limit))
   }
 
   async listHotByCountry(query: HotNewsQuery): Promise<ArticleRow[]> {
@@ -104,7 +104,6 @@ export class DbArticleRepository {
         publishedAfter: query.publishedAfter,
         limit: query.limit,
       }),
-      false,
     )
   }
 
@@ -125,22 +124,19 @@ export class DbArticleRepository {
     return result.rows.length
   }
 
-  private async read(
-    query: Parameters<DbClient['execute']>[0],
-    includeBody: boolean,
-  ): Promise<ArticleRow[]> {
+  private async read(query: Parameters<DbClient['execute']>[0]): Promise<ArticleRow[]> {
     const result = await this.db.execute(query)
-    return result.rows.map((record) => toRow(record as Record<string, unknown>, includeBody))
+    return result.rows.map((record) => toRow(record as Record<string, unknown>))
   }
 }
 
-function toRow(record: Record<string, unknown>, includeBody: boolean): ArticleRow {
+function toRow(record: Record<string, unknown>): ArticleRow {
   const tags = record.tags
   return {
     id: String(record.id),
     title: String(record.title),
     description: nullableText(record.description),
-    body: includeBody ? String(record.body ?? '') : '',
+    body: String(record.body ?? ''),
     body_html: nullableText(record.body_html),
     image_url: nullableText(record.image_url),
     favicon_url: nullableText(record.favicon_url),
@@ -164,7 +160,24 @@ function toRow(record: Record<string, unknown>, includeBody: boolean): ArticleRo
     read_time_minutes: nullableInt(record.read_time_minutes),
     words_count: nullableInt(record.words_count),
     source_rank: nullableInt(record.source_rank),
-    country_codes: [],
+    story_id: nullableText(record.story_id),
+    country_codes: readCodes(record.country_codes),
+  }
+}
+
+function readCodes(value: unknown): string[] {
+  const parsed = typeof value === 'string' ? parseJson(value) : value
+  if (!Array.isArray(parsed)) {
+    return []
+  }
+  return parsed.map((code) => String(code))
+}
+
+function parseJson(value: string): unknown {
+  try {
+    return JSON.parse(value)
+  } catch {
+    return []
   }
 }
 

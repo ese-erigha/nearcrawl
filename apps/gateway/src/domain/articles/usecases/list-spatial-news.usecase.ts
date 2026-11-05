@@ -1,12 +1,12 @@
 import { requireKnownCategory } from '../../categories/require-known-category.ts'
 import { getConfig } from '../../../lib/context.ts'
-import { mapArticlePin, type ArticlePin } from '../articles.mappers.ts'
+import { mapArticle, type Article } from '../articles.mappers.ts'
 import { getArticleRepository } from '../articles.repository.ts'
 import type { SpatialNewsInput } from '../spatial-news.schema.ts'
 
 export async function listSpatialNews(
   input: SpatialNewsInput,
-): Promise<{ articles: ArticlePin[]; truncated: boolean }> {
+): Promise<{ articles: Article[]; truncated: boolean }> {
   await requireKnownCategory(input.categoryId)
   const config = getConfig()
   const repository = getArticleRepository()
@@ -15,6 +15,6 @@ export async function listSpatialNews(
     categoryId: input.categoryId,
     limit: config.spatialNewsCap,
   })
-  const articles = result.rows.map(mapArticlePin)
+  const articles = result.rows.map(mapArticle)
   return { articles, truncated: result.truncated }
 }

@@ -1,9 +1,9 @@
-import type { Story } from '../fixtures/home.fixture.ts'
+import type { Article } from '../fixtures/home.fixture.ts'
 import { BriefStory } from './brief-story.tsx'
 
 type BriefGroupProps = {
   label: string
-  stories: Story[]
+  stories: Article[]
 }
 
 export function BriefGroup({ label, stories }: BriefGroupProps) {

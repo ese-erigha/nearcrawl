@@ -4,7 +4,7 @@ import { describe, it } from 'node:test'
 import { CATEGORY, categoryCatalog } from 'db'
 
 import app from './app.ts'
-import type { ArticlePin } from './domain/articles/articles.mappers.ts'
+import type { Article } from './domain/articles/articles.mappers.ts'
 import type { GatewayBindings } from './config.ts'
 
 const testEnv: GatewayBindings = {
@@ -31,7 +31,7 @@ describe('gateway routes', () => {
   it('returns the fixture pin for a box that contains it', async () => {
     const response = await request('/api/spatial/news?bbox=103,1,104,2')
     assert.equal(response.status, 200)
-    const body = (await response.json()) as { truncated: boolean; articles: ArticlePin[] }
+    const body = (await response.json()) as { truncated: boolean; articles: Article[] }
     assert.equal(body.truncated, false)
     assert.equal(body.articles[0]?.sourceName, 'Harbor Desk')
     assert.equal(body.articles[0]?.categoryId, CATEGORY.POLITICS)
@@ -76,7 +76,7 @@ describe('gateway routes', () => {
   it('returns the fixture from the politics article list', async () => {
     const response = await request(`/api/categories/${CATEGORY.POLITICS}/articles`)
     assert.equal(response.status, 200)
-    const body = (await response.json()) as { articles: ArticlePin[] }
+    const body = (await response.json()) as { articles: Article[] }
     assert.equal(body.articles[0]?.categoryId, CATEGORY.POLITICS)
   })
 

@@ -4,7 +4,7 @@ import { createAtlasGl, type AtlasGl } from './atlas-gl.ts'
 import atlasUrl from './atlas.webp'
 import reliefUrl from './earth-relief.jpg'
 import lightsUrl from './earth-night.jpg'
-import type { Story } from '../fixtures/home.fixture.ts'
+import type { Article } from '../fixtures/home.fixture.ts'
 import { createGlobeSky, type GlobeSky } from './globe-sky.ts'
 import {
   FLY_HOME_MS,
@@ -36,7 +36,7 @@ type Flight = {
 }
 
 type GlobeCanvasProps = {
-  stories: Story[]
+  stories: Article[]
   insetLeft: number
   insetRight: number
   insetBottom: number

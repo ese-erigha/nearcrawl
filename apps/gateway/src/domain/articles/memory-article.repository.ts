@@ -30,6 +30,7 @@ const FIXTURE: ArticleRow[] = [
     read_time_minutes: 3,
     words_count: 120,
     source_rank: null,
+    story_id: null,
     country_codes: ['SG'],
   },
 ]

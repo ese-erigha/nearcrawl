@@ -1,8 +1,8 @@
-import type { Story } from '../fixtures/home.fixture.ts'
+import { articleAge, type Article } from '../fixtures/home.fixture.ts'
 import { BANNER_HEIGHT, BANNER_WIDTH, type PlacedBanner } from './globe-math.ts'
 
 type PinBannersProps = {
-  stories: Story[]
+  stories: Article[]
   placed: PlacedBanner[]
   onSelect: (id: string) => void
 }
@@ -57,7 +57,7 @@ export function PinBanners({ stories, placed, onSelect }: PinBannersProps) {
                 <span className="flex items-center gap-1 text-[11px] leading-tight whitespace-nowrap text-ink-3">
                   <span className={story.isBreaking ? 'size-1.5 rounded-full bg-breaking' : 'size-1.5 rounded-full bg-ink-2'} />
                   {story.isBreaking ? 'Breaking' : story.sourceName}
-                  <span className="text-ink-4">· {story.ageLabel}</span>
+                  <span className="text-ink-4">· {articleAge(story)}</span>
                 </span>
               </span>
             </button>

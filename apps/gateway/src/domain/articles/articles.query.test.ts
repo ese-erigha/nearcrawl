@@ -26,4 +26,21 @@ describe('spatialNewsSql', () => {
     assert.equal(compiled.params.includes(CATEGORY.FINANCE), true)
     assert.equal(compiled.params.includes(200), true)
   })
+
+  it('when spatial news is compiled, then the select includes the article body and country codes', () => {
+    const compiled = compileSql(
+      spatialNewsSql({
+        west: 170,
+        south: -10,
+        east: -170,
+        north: 10,
+        categoryId: null,
+        limit: 200,
+      }),
+    )
+
+    assert.match(compiled.sql, /articles\.body/)
+    assert.match(compiled.sql, /country_codes/)
+    assert.match(compiled.sql, /story_id/)
+  })
 })

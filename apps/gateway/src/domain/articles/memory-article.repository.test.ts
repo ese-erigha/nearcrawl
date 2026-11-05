@@ -31,6 +31,7 @@ function row(overrides: Partial<ArticleRow> & Pick<ArticleRow, 'id' | 'latitude'
     read_time_minutes: null,
     words_count: null,
     source_rank: null,
+    story_id: null,
     country_codes: [],
     ...overrides,
   }

@@ -10,6 +10,9 @@ import {
 import { HotCategoryChips } from './hot-category-chips.tsx'
 import { HotStoryRow } from './hot-story-row.tsx'
 
+export const HOT_PANEL_WIDTH = 420
+export const HOT_PANEL_INSET = HOT_PANEL_WIDTH + 32
+
 type HotPanelProps = {
   onClose: () => void
   selectedId: string | null
@@ -20,9 +23,14 @@ export function HotPanel({ onClose, selectedId, onSelect }: HotPanelProps) {
   const [category, setCategory] = useState<Category>(CATEGORY.ALL)
   const [query, setQuery] = useState('')
   const stories = listCountryStories(category, query)
+  const breaking = stories.filter((story) => story.isBreaking)
+  const alsoHot = stories.filter((story) => !story.isBreaking)
 
   return (
-    <aside className="absolute top-4 bottom-4 left-4 z-10 flex w-[22rem] max-w-[calc(100%-2rem)] flex-col rounded-[22px] bg-surface p-4 shadow-[inset_0_0_0_1px_var(--color-hairline),0_12px_32px_rgb(0_0_0/0.35)]">
+    <aside
+      style={{ width: HOT_PANEL_WIDTH }}
+      className="absolute top-4 bottom-4 left-4 z-10 flex max-w-[calc(100%-2rem)] flex-col rounded-[22px] bg-surface p-4 shadow-[inset_0_0_0_1px_var(--color-hairline),0_12px_32px_rgb(0_0_0/0.35)]"
+    >
       <div className="flex items-start justify-between gap-3">
         <div>
           <h1 className="font-condensed text-[28px] leading-none font-bold tracking-[-0.02em] text-ink">
@@ -59,11 +67,28 @@ export function HotPanel({ onClose, selectedId, onSelect }: HotPanelProps) {
           className="w-full rounded-full border border-white/10 bg-white/4 px-3 py-2 text-sm text-ink outline-none placeholder:text-ink-4"
         />
       </label>
-      <ul className="mt-3 min-h-0 flex-1 space-y-1 overflow-auto pr-1">
-        {stories.map((story) => (
-          <HotStoryRow key={story.id} story={story} selected={story.id === selectedId} onSelect={onSelect} />
-        ))}
-      </ul>
+      <div className="mt-3 min-h-0 flex-1 space-y-4 overflow-auto pr-1">
+        {breaking.length > 0 ? (
+          <section aria-label="Breaking">
+            <h2 className="mb-2 font-mono text-[10.5px] tracking-[0.08em] text-ink-3 uppercase">Breaking</h2>
+            <ul className="space-y-2">
+              {breaking.map((story) => (
+                <HotStoryRow key={story.id} story={story} selected={story.id === selectedId} onSelect={onSelect} />
+              ))}
+            </ul>
+          </section>
+        ) : null}
+        {alsoHot.length > 0 ? (
+          <section aria-label="Also hot">
+            <h2 className="mb-2 font-mono text-[10.5px] tracking-[0.08em] text-ink-3 uppercase">Also hot</h2>
+            <ul className="space-y-2">
+              {alsoHot.map((story) => (
+                <HotStoryRow key={story.id} story={story} selected={story.id === selectedId} onSelect={onSelect} />
+              ))}
+            </ul>
+          </section>
+        ) : null}
+      </div>
     </aside>
   )
 }

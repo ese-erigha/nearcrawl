@@ -1,16 +1,16 @@
 import { useEffect, useState } from 'react'
 
-import { STORIES } from '../fixtures/home.fixture.ts'
+import { ARTICLES } from '../fixtures/home.fixture.ts'
 import { BreakingDock } from '../map/breaking-dock.tsx'
 import { GlobeCanvas } from '../map/globe-canvas.tsx'
 import { DETAIL_MAP_INSET } from '../map/globe-math.ts'
-import { HotPanel } from '../map/hot-panel.tsx'
+import { HOT_PANEL_INSET, HotPanel } from '../map/hot-panel.tsx'
 import { StoryPanel } from '../map/story-panel.tsx'
 
 export function MapScreen() {
   const [panelOpen, setPanelOpen] = useState(true)
   const [selectedId, setSelectedId] = useState<string | null>(null)
-  const selected = STORIES.find((story) => story.id === selectedId) ?? null
+  const selected = ARTICLES.find((story) => story.id === selectedId) ?? null
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -26,8 +26,8 @@ export function MapScreen() {
   return (
     <div className="absolute inset-0">
       <GlobeCanvas
-        stories={STORIES}
-        insetLeft={panelOpen ? 400 : 16}
+        stories={ARTICLES}
+        insetLeft={panelOpen ? HOT_PANEL_INSET : 16}
         insetRight={selected ? DETAIL_MAP_INSET : 0}
         insetBottom={196}
         selectedId={selectedId}

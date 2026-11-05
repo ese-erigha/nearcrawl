@@ -15,10 +15,26 @@ const filedCategoriesSql = sql`
   )
 `
 
-const cardColumnsSql = sql`
-  id, title, description, image_url, favicon_url, source_name, source_url,
-  latitude, longitude, category_id, ${filedCategoriesSql} AS filed,
-  tags, published_at, is_breaking, read_time_minutes, is_free, share_count
+const countryCodesSql = sql`
+  COALESCE(
+    (
+      SELECT json_agg(article_countries.country_code ORDER BY article_countries.country_code)
+      FROM article_countries
+      WHERE article_countries.article_id = articles.id
+    ),
+    '[]'::json
+  )
+`
+
+const articleColumnsSql = sql`
+  articles.id, articles.title, articles.description, articles.body, articles.body_html,
+  articles.image_url, articles.favicon_url, articles.author_name,
+  articles.source_name, articles.source_url, articles.source_home_url,
+  articles.source_country_name, articles.source_country_code,
+  articles.latitude, articles.longitude, articles.category_id, ${filedCategoriesSql} AS filed,
+  ${countryCodesSql} AS country_codes,
+  articles.tags, articles.published_at, articles.is_breaking, articles.read_time_minutes,
+  articles.is_free, articles.share_count, articles.words_count, articles.source_rank, articles.story_id
 `
 
 export type SpatialNewsStatement = {
@@ -37,7 +53,7 @@ export type CompiledSql = {
 
 export function spatialNewsSql(input: SpatialNewsStatement): SQL {
   return sql`
-    SELECT ${cardColumnsSql}
+    SELECT ${articleColumnsSql}
     FROM articles
     WHERE latitude BETWEEN ${input.south} AND ${input.north}
       AND (
@@ -59,7 +75,7 @@ export function spatialNewsSql(input: SpatialNewsStatement): SQL {
 
 export function categoryArticlesSql(categoryId: number, limit: number): SQL {
   return sql`
-    SELECT ${cardColumnsSql}
+    SELECT ${articleColumnsSql}
     FROM articles
     WHERE EXISTS (
       SELECT 1 FROM article_categories
@@ -73,11 +89,9 @@ export function categoryArticlesSql(categoryId: number, limit: number): SQL {
 
 export function articleByIdSql(id: string): SQL {
   return sql`
-    SELECT ${cardColumnsSql},
-           body, body_html, author_name, source_home_url,
-           source_country_name, source_country_code, words_count
+    SELECT ${articleColumnsSql}
     FROM articles
-    WHERE id = ${id}
+    WHERE articles.id = ${id}
   `
 }
 
@@ -89,11 +103,7 @@ export type HotNewsStatement = {
 
 export function hotNewsSql(input: HotNewsStatement): SQL {
   return sql`
-    SELECT articles.id, articles.title, articles.description, articles.image_url, articles.favicon_url,
-           articles.source_name, articles.source_url, articles.latitude, articles.longitude,
-           articles.category_id, ${filedCategoriesSql} AS filed, articles.tags, articles.published_at,
-           articles.is_breaking, articles.read_time_minutes, articles.is_free, articles.share_count,
-           articles.source_rank
+    SELECT ${articleColumnsSql}
     FROM articles
     JOIN article_countries ON article_countries.article_id = articles.id
     WHERE article_countries.country_code = ${input.countryCode}

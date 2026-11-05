@@ -2,6 +2,7 @@ import { CaretLeft, CaretRight } from '@phosphor-icons/react'
 import { useRef } from 'react'
 
 import { listGlobalBreaking } from '../fixtures/home.fixture.ts'
+import { HOT_PANEL_INSET } from './hot-panel.tsx'
 import { DETAIL_MAP_INSET } from './globe-math.ts'
 import { BreakingCard } from './breaking-card.tsx'
 
@@ -26,7 +27,7 @@ export function BreakingDock({ panelOpen, detailOpen, onSelect }: BreakingDockPr
       aria-label="Global Breaking News"
       className="absolute bottom-4 z-10 rounded-[22px] bg-[#0c0c0c] p-3 shadow-[inset_0_0_0_1px_var(--color-hairline),0_12px_32px_rgb(0_0_0/0.35)]"
       style={{
-        left: panelOpen ? '24.5rem' : 16,
+        left: panelOpen ? HOT_PANEL_INSET : 16,
         right: detailOpen ? DETAIL_MAP_INSET + 16 : 16,
       }}
     >
