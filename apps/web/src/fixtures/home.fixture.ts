@@ -1,3 +1,5 @@
+import { FEED_PLACES } from './feed.fixture.ts'
+
 export const VISITOR_COUNTRY = 'Japan'
 export const VISITOR_COUNTRY_CODE = 'JP'
 
@@ -36,6 +38,7 @@ const COUNTRY_NAME: Record<string, string> = {
   GB: 'United Kingdom',
   NG: 'Nigeria',
   DE: 'Germany',
+  ...Object.fromEntries(FEED_PLACES.map((place) => [place.countryCode, place.countryName])),
 }
 
 export const BRIEF_GROUP = {
@@ -136,7 +139,7 @@ function article(input: ArticleInput): Article {
   }
 }
 
-export const ARTICLES: Article[] = [
+const NAMED_ARTICLES: Article[] = [
   article({
     id: 'kyushu-typhoon',
     title: 'Typhoon watch covers Kyushu ports',
@@ -292,6 +295,60 @@ export const ARTICLES: Article[] = [
     wordsCount: 310,
   }),
 ]
+
+const BEAT_SHIFT = [
+  { latitude: 0, longitude: 0 },
+  { latitude: 3.2, longitude: -2.4 },
+  { latitude: -2.2, longitude: 3.6 },
+] as const
+
+const BEATS = [
+  {
+    topic: CATEGORY.POLITICS,
+    title: (city: string) => `${city} sets the next budget vote`,
+    description: 'Lawmakers argue the spending line before the session ends.',
+    body: 'Lawmakers argue the spending line before the session ends. A vote is set for later in the week.',
+  },
+  {
+    topic: CATEGORY.FINANCE,
+    title: (city: string) => `${city} shares slip after the rate hint`,
+    description: 'Traders cut bank shares in the afternoon session.',
+    body: 'Traders cut bank shares in the afternoon session. The close finishes lower.',
+  },
+  {
+    topic: CATEGORY.DISASTER,
+    title: (city: string) => `${city} closes roads as the storm turns`,
+    description: 'Ferries stop and the night roads stay shut.',
+    body: 'Ferries stop and the night roads stay shut. Crews keep the coast watch in place.',
+  },
+] as const
+
+function feedArticles(): Article[] {
+  return FEED_PLACES.flatMap((place, placeIndex) =>
+    BEATS.map((beat, beatIndex) => {
+      const shift = BEAT_SHIFT[beatIndex] ?? BEAT_SHIFT[0]
+      return article({
+        id: `${place.id}-${beat.topic}`,
+        title: beat.title(place.city),
+        description: beat.description,
+        body: beat.body,
+        sourceName: `${place.city} Desk`,
+        sourceUrl: `https://example.com/${place.id}`,
+        latitude: place.latitude + shift.latitude,
+        longitude: place.longitude + shift.longitude,
+        topic: beat.topic,
+        countryCode: place.countryCode,
+        hoursAgo: placeIndex * 8 + beatIndex * 6 + 3,
+        isBreaking: false,
+        shareCount: (placeIndex + beatIndex) % 18,
+        readTimeMinutes: 3,
+        wordsCount: 280,
+      })
+    }),
+  )
+}
+
+export const ARTICLES: Article[] = [...NAMED_ARTICLES, ...feedArticles()]
 
 export function articleCountry(item: Article): string {
   const code = item.countryCodes[0]

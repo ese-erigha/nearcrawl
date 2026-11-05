@@ -76,4 +76,25 @@ describe('placeBanners', () => {
       first.top + 40 > second.top
     assert.equal(overlaps, false)
   })
+
+  it('when more than ten pins fit, then the map shows ten banners', () => {
+    const pin = (id: string, x: number, y: number) => ({ id, x, y, breaking: false })
+    const placed = placeBanners(
+      [
+        pin('a', 180, 180),
+        pin('b', 430, 180),
+        pin('c', 680, 180),
+        pin('d', 930, 180),
+        pin('e', 180, 380),
+        pin('f', 430, 380),
+        pin('g', 680, 380),
+        pin('h', 930, 380),
+        pin('i', 180, 560),
+        pin('j', 430, 560),
+        pin('k', 680, 560),
+      ],
+      frame,
+    )
+    assert.equal(placed.length, 10)
+  })
 })

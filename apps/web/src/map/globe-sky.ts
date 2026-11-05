@@ -42,7 +42,8 @@ void main() {
   float lon = atan(p.x, z) - uRotation;
   vec2 uv = vec2(fract(lon / 6.2831853 + 0.5), lat / 3.14159265 + 0.5);
   float gray = texture(uRelief, uv).r;
-  vec3 color = vec3(gray * (0.9 + 0.1 * z));
+  // The baked relief is still brighter than Mapbox night relief (brightness max 0.6).
+  vec3 color = vec3(gray * (0.4 + 0.08 * z));
 
   float light = texture(uLights, uv).r;
   float glow = smoothstep(0.08, 0.28, light) * 0.28;
@@ -50,9 +51,9 @@ void main() {
   glow += smoothstep(0.62, 1.0, light) * 0.28;
   color += vec3(0.97, 0.96, 0.93) * glow;
 
-  float limb = smoothstep(0.9, 1.0, r);
-  color = mix(color, vec3(0.145, 0.145, 0.145), limb * 0.55);
-  color = mix(color, vec3(0.22, 0.22, 0.22), smoothstep(0.985, 1.0, r));
+  float limb = smoothstep(0.88, 1.0, r);
+  color = mix(color, vec3(0.075, 0.075, 0.075), limb * 0.45);
+  color = mix(color, vec3(0.145, 0.145, 0.145), smoothstep(0.97, 1.0, r));
   outColor = vec4(color, 1.0);
 }`
 

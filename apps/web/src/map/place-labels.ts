@@ -81,19 +81,21 @@ export function drawPlaceLabels(
   for (const place of PLACES) {
     const point = project(place.latitude, place.longitude, rotation, centerX, centerY, radius)
     if (point.z < 0.46) continue
-    const size = place.kind === LABEL_KIND.COUNTRY ? 12 : 11
+    const isContinent = place.kind === LABEL_KIND.REGION
+    const size = isContinent ? 13 : place.kind === LABEL_KIND.COUNTRY ? 12 : 11
     const text = place.kind === LABEL_KIND.COUNTRY ? place.name : place.name.toUpperCase()
     context.font = `500 ${size}px "Mona Sans", sans-serif`
-    context.letterSpacing = place.kind === LABEL_KIND.COUNTRY ? '0.2px' : '1.2px'
+    context.letterSpacing = isContinent ? '0.65px' : place.kind === LABEL_KIND.COUNTRY ? '0.2px' : '1.2px'
     const width = context.measureText(text).width
     const box = { x: point.x - width / 2, y: point.y - size / 2, w: width, h: size }
     if (overlaps(box, boxes)) continue
     boxes.push(box)
     context.globalAlpha = 1
-    context.lineWidth = 2
-    context.strokeStyle = 'rgba(8,8,8,0.72)'
+    // Night continent labels stay uppercase, at 80% lightness, and fade to about half opacity.
+    context.lineWidth = isContinent ? 1.5 : 2
+    context.strokeStyle = isContinent ? 'rgba(51,51,51,0.54)' : 'rgba(8,8,8,0.72)'
     context.strokeText(text, point.x, point.y)
-    context.fillStyle = place.kind === LABEL_KIND.OCEAN ? '#d6d6d6' : '#e4e4e4'
+    context.fillStyle = isContinent ? 'rgba(204,204,204,0.54)' : place.kind === LABEL_KIND.OCEAN ? '#d6d6d6' : '#e4e4e4'
     context.fillText(text, point.x, point.y)
   }
 

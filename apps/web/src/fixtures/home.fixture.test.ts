@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 
-import { CATEGORY, TOPIC, VISITOR_COUNTRY_CODE, listBriefGroups, listCountryStories, listGlobalBreaking } from './home.fixture.ts'
+import { ARTICLES, CATEGORY, TOPIC, VISITOR_COUNTRY_CODE, listBriefGroups, listCountryStories, listGlobalBreaking } from './home.fixture.ts'
 
 describe('home fixtures', () => {
   it('when the visitor has no account, then the country list is Japan only', () => {
@@ -31,6 +31,14 @@ describe('home fixtures', () => {
     assert.equal(typeof story.categoryId, 'number')
     assert.equal(story.storyId, null)
     assert.ok(story.countryCodes.length > 0)
+  })
+
+  it('when the globe feed loads, then it includes stories that are not breaking', () => {
+    assert.ok(ARTICLES.length >= 100)
+    const dockIds = new Set(listGlobalBreaking().map((story) => story.id))
+    assert.ok(ARTICLES.some((story) => !story.isBreaking && !dockIds.has(story.id)))
+    const codes = new Set(ARTICLES.flatMap((story) => story.countryCodes))
+    assert.ok(codes.size >= 20)
   })
 
   it('when the dock loads, then every card is a breaking story', () => {

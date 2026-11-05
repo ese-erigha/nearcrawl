@@ -23,6 +23,7 @@ import {
   type PlacedBanner,
 } from './globe-math.ts'
 import { PinBanners } from './pin-banners.tsx'
+import { drawCountryHeat } from './country-heat.ts'
 import { drawPlaceLabels } from './place-labels.ts'
 
 const PIN_REACH = 14
@@ -211,6 +212,7 @@ export function GlobeCanvas({ stories, insetLeft, insetRight, insetBottom, selec
         context.arc(centerX, centerY, radius, 0, Math.PI * 2)
         context.fill()
       }
+      drawCountryHeat(context, storiesRef.current, rotation, centerX, centerY, radius)
       drawPlaceLabels(context, rotation, centerX, centerY, radius)
       const pins = []
       for (const story of storiesRef.current) {

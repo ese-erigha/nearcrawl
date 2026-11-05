@@ -34,7 +34,7 @@ export function project(
   }
 }
 
-export const BANNER_LIMIT = 6
+export const BANNER_LIMIT = 10
 export const BANNER_WIDTH = 210
 export const BANNER_HEIGHT = 40
 

@@ -4,12 +4,44 @@ This file lists the user stories in the PRD and in the phase plans. A story is *
 
 The ingestion pull cron and the purge cron are off in `apps/ingestion/wrangler.toml`. The pull code and the purge code exist. A schedule does not run them.
 
+## Home page
+
+The home page answers three questions. Each piece owns one question.
+
+- **Left list.** What is hot where I am.
+  - The list is the country hot list for the device country. The window is 14 days. A duplicate stays out.
+  - Breaking stories come first, then stories with more shares, then newer stories.
+  - The daily brief is this same list on its own page. Breaking is the first group. The other hot stories follow.
+  - After sign-up, this list follows the home countries, the topics, and the tracked names.
+- **Ticker.** What just broke in the world.
+  - The set is every breaking story, in every country.
+  - The order is `published_at`, newest first. A new story with no shares still belongs here.
+  - The header shows one title, then the next. The ticker stays on the map and on the daily brief.
+  - After sign-up, the ticker stays the world wire.
+- **Bottom dock.** Which world story should I open.
+  - The set is those same breaking stories.
+  - The order is `share_count`, then `published_at`. A new story with no shares stays off the dock. An older story with many shares stays.
+  - The dock sits only on the map. A card shows the country, the title, and one sentence. A click opens that story and turns the globe to its place.
+- **Globe.** What the 14-day feed holds.
+  - The globe takes the 100 newest stories in the 14-day window. The order is `published_at`, newest first. A duplicate stays out.
+  - The globe does not rank by `share_count`. The dock already does that. A new story with no shares still belongs on the globe.
+  - A story does not have to be breaking, and it does not have to sit in the dock.
+  - A breaking pin is red. Any other pin is neutral. A click on any pin opens that story and turns the globe to its place.
+  - The left list, the ticker, and the dock stay on their own sets. The globe does not copy those filters.
+  - When one country fills the 100, cap the count per country. Do not switch the globe to shares.
+
+A story appears in the ticker and the dock only when it is both new and widely shared.
+
+Later, `story_id` groups the dock. Several articles about one event become one card. The ticker still shows each new article.
+
+The page still draws both strips from one breaking list. The split above is the rule.
+
 ## Phase 1
 
 - **US-1.1 Globe, pins, and heatmaps**
-  - Story: As a user, I want a responsive 3D globe with pins and activity heatmaps, so that I can see breaking news clusters without a text query.
-  - Source: PRD Epic 1. The globe is future work in the phase 1 plan.
-  - Status: Not implemented.
+  - Story: As a user, I want a responsive 3D globe with pins and activity heatmaps, so that I can see the full feed without a text query.
+  - Source: PRD Epic 1. The home page section above states the globe rule.
+  - Status: The fixture globe pins the sample feed, including stories that are not breaking. A click opens that story. The page does not call the gateway. The 100-story cap is the rule. The page does not apply it yet.
 - **US-1.2 News for one place**
   - Story: As a user, I want to click a country, a region, or a city, or draw a box, so that I see news only for that place.
   - Source: PRD Epic 1. The phase 1 plan adds the box read and the live seal.
