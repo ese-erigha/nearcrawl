@@ -1,17 +1,38 @@
-import { X } from '@phosphor-icons/react'
+import { MagnifyingGlass, Newspaper, X } from '@phosphor-icons/react'
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 
 import {
   CATEGORY,
   listCountryStories,
   VISITOR_COUNTRY,
+  type Article,
   type Category,
 } from '../fixtures/home.fixture.ts'
+import { PATH } from '../shell/navigation.constants.ts'
 import { HotCategoryChips } from './hot-category-chips.tsx'
+import { HotMetricCard } from './hot-metric-card.tsx'
 import { HotStoryRow } from './hot-story-row.tsx'
+import { HotTimeSwitch } from './hot-time-switch.tsx'
+import {
+  FEED_WINDOW,
+  categoryCounts,
+  matchesCategory,
+  storiesInWindow,
+  storyBars,
+  type FeedWindow,
+} from './hot-window.ts'
 
 export const HOT_PANEL_WIDTH = 420
 export const HOT_PANEL_INSET = HOT_PANEL_WIDTH + 32
+
+const LIST_FILTER = {
+  ALL: 'all',
+  BREAKING: 'breaking',
+  ALSO_HOT: 'also-hot',
+} as const
+
+type ListFilter = (typeof LIST_FILTER)[keyof typeof LIST_FILTER]
 
 type HotPanelProps = {
   onClose: () => void
@@ -19,70 +40,116 @@ type HotPanelProps = {
   onSelect: (id: string) => void
 }
 
+function matchesFilter(story: Article, filter: ListFilter): boolean {
+  if (filter === LIST_FILTER.BREAKING) return story.isBreaking
+  if (filter === LIST_FILTER.ALSO_HOT) return !story.isBreaking
+  return true
+}
+
 export function HotPanel({ onClose, selectedId, onSelect }: HotPanelProps) {
   const [category, setCategory] = useState<Category>(CATEGORY.ALL)
+  const [feedWindow, setFeedWindow] = useState<FeedWindow>(FEED_WINDOW.FEED)
+  const [filter, setFilter] = useState<ListFilter>(LIST_FILTER.ALL)
   const [query, setQuery] = useState('')
-  const stories = listCountryStories(category, query)
-  const breaking = stories.filter((story) => story.isBreaking)
-  const alsoHot = stories.filter((story) => !story.isBreaking)
+  const country = listCountryStories(CATEGORY.ALL, '')
+  const inWindow = storiesInWindow(country, feedWindow)
+  const bars = storyBars(inWindow, feedWindow)
+  const breaking = inWindow.filter((story) => story.isBreaking).length
+  const afterStatus = inWindow.filter((story) => matchesFilter(story, filter))
+  const counts = categoryCounts(afterStatus)
+  const needle = query.trim().toLowerCase()
+  const stories = afterStatus.filter(
+    (story) => matchesCategory(story, category) && (needle.length === 0 || story.title.toLowerCase().includes(needle)),
+  )
+  const breakingStories = stories.filter((story) => story.isBreaking)
+  const alsoHotStories = stories.filter((story) => !story.isBreaking)
+  const toggle = (next: ListFilter) => setFilter((current) => (current === next ? LIST_FILTER.ALL : next))
 
   return (
     <aside
       style={{ width: HOT_PANEL_WIDTH }}
-      className="absolute top-4 bottom-4 left-4 z-10 flex max-w-[calc(100%-2rem)] flex-col rounded-[22px] bg-surface p-4 shadow-[inset_0_0_0_1px_var(--color-hairline),0_12px_32px_rgb(0_0_0/0.35)]"
+      className="absolute top-4 bottom-4 left-4 z-10 flex max-w-[calc(100%-2rem)] flex-col overflow-auto rounded-[22px] bg-surface p-4 shadow-[inset_0_0_0_1px_var(--color-hairline),0_12px_32px_rgb(0_0_0/0.35)]"
     >
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="font-condensed text-[28px] leading-none font-bold tracking-[-0.02em] text-ink">
+          <h1 className="font-condensed text-[32px] leading-[0.95] font-bold tracking-[-0.02em] text-ink">
             Hot in {VISITOR_COUNTRY}
           </h1>
-          <p className="mt-1 text-sm text-ink-3">Hot where you are.</p>
+          <p className="mt-2 text-[14px] leading-snug text-ink-3">Hot where you are.</p>
         </div>
         <button
           type="button"
           aria-label="Close the country list"
           onClick={onClose}
-          className="rounded-full p-1.5 text-ink-3 hover:bg-white/5"
+          className="flex size-8 items-center justify-center rounded-[8px] text-ink-3 shadow-[inset_0_0_0_1px_var(--color-hairline)] hover:bg-white/5"
         >
-          <X size={16} />
+          <X size={14} />
         </button>
       </div>
-      <p className="mt-3 font-mono text-[10px] tracking-wide text-ink-4 uppercase">
-        <span className="mr-2 inline-block size-1.5 rounded-full bg-emerald-300" />
-        Sample · 14-day feed
-      </p>
-      <p className="mt-4 font-condensed text-5xl leading-none font-bold tracking-[-0.03em] text-ink">
-        {stories.length}
-      </p>
-      <p className="mt-1 font-mono text-[10px] tracking-wide text-ink-4 uppercase">stories</p>
-      <div className="mt-4">
-        <HotCategoryChips category={category} onSelect={setCategory} />
+      <div className="mt-4 flex items-center justify-between gap-3">
+        <p className="text-[13px] text-ink-2">
+          <span className="mr-2 inline-block size-1.5 rounded-full bg-live" />
+          Live · 14-day feed
+        </p>
+        <HotTimeSwitch window={feedWindow} onSelect={setFeedWindow} />
       </div>
-      <label className="mt-3 block">
+      <HotMetricCard
+        total={inWindow.length}
+        bars={bars}
+        window={feedWindow}
+        breaking={breaking}
+        alsoHot={inWindow.length - breaking}
+        breakingOn={filter === LIST_FILTER.BREAKING}
+        alsoHotOn={filter === LIST_FILTER.ALSO_HOT}
+        onBreaking={() => toggle(LIST_FILTER.BREAKING)}
+        onAlsoHot={() => toggle(LIST_FILTER.ALSO_HOT)}
+      />
+      <p className="mt-3 text-[12px] leading-relaxed text-ink-4">
+        The number is every story in this country for that window. A status filters the list.
+      </p>
+      <label className="relative mt-3 block">
         <span className="sr-only">Search this region</span>
+        <MagnifyingGlass size={16} className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-ink-4" />
         <input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Search this region"
-          className="w-full rounded-full border border-white/10 bg-white/4 px-3 py-2 text-sm text-ink outline-none placeholder:text-ink-4"
+          className="w-full rounded-full border border-white/15 bg-black py-2 pr-9 pl-9 text-sm text-ink outline-none placeholder:text-ink-4"
         />
+        {query.length > 0 ? (
+          <button
+            type="button"
+            aria-label="Clear search"
+            onClick={() => setQuery('')}
+            className="absolute top-1/2 right-2 flex size-6 -translate-y-1/2 items-center justify-center rounded-full text-ink-4 hover:text-ink"
+          >
+            <X size={12} />
+          </button>
+        ) : null}
       </label>
-      <div className="mt-3 min-h-0 flex-1 space-y-4 overflow-auto pr-1">
-        {breaking.length > 0 ? (
+      <Link to={PATH.BRIEF} className="mt-3 inline-flex items-center gap-1.5 text-[13px] text-ink-3 hover:text-ink">
+        <Newspaper size={14} />
+        Daily brief
+      </Link>
+      <div className="mt-3">
+        <HotCategoryChips category={category} counts={counts} onSelect={setCategory} />
+      </div>
+      <div className="mt-4 space-y-4">
+        {breakingStories.length > 0 ? (
           <section aria-label="Breaking">
-            <h2 className="mb-2 font-mono text-[10.5px] tracking-[0.08em] text-ink-3 uppercase">Breaking</h2>
+            <h2 className="mb-2 font-mono text-[10.5px] tracking-[0.08em] text-ink-4 uppercase">Breaking</h2>
             <ul className="space-y-2">
-              {breaking.map((story) => (
+              {breakingStories.map((story) => (
                 <HotStoryRow key={story.id} story={story} selected={story.id === selectedId} onSelect={onSelect} />
               ))}
             </ul>
           </section>
         ) : null}
-        {alsoHot.length > 0 ? (
+        {alsoHotStories.length > 0 ? (
           <section aria-label="Also hot">
-            <h2 className="mb-2 font-mono text-[10.5px] tracking-[0.08em] text-ink-3 uppercase">Also hot</h2>
+            <h2 className="mb-2 font-mono text-[10.5px] tracking-[0.08em] text-ink-4 uppercase">Also hot</h2>
             <ul className="space-y-2">
-              {alsoHot.map((story) => (
+              {alsoHotStories.map((story) => (
                 <HotStoryRow key={story.id} story={story} selected={story.id === selectedId} onSelect={onSelect} />
               ))}
             </ul>

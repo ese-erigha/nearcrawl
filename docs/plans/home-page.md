@@ -13,7 +13,7 @@ The live site is one dark screen. The map is the page. Panels sit on top of it.
 - The map is a dark dotted earth. It spins on its own while nobody touches it. A press, a drag, or a scroll stops the spin. The spin starts again 4 seconds after the pointer lifts, or 4 seconds after the last scroll. It continues from the place where it stopped. It does not jump back to a home country. A pin is a small source mark plus a title. Red marks the urgent items. A Layers control sits at the top right of the map.
 - A dock along the bottom holds a horizontal row of urgent cards. The row can scroll.
 
-Daily brief is a separate page at `/brief`. The same top bar stays. A breadcrumb says Live map, then Daily brief. One date line, one large title, and one opening paragraph come first. The rest of the page is grouped lists. Each item has a title, one sentence, and a source. A button returns to the live map.
+Daily brief is a separate page at `/brief`. The same top bar stays. The page is a document: a large title, a count card, a dotted map, and the country list.
 
 The design notes in that repo say the globe carries the drama and the panels stay quiet. One large number per view. Labels are small. Status color means status only.
 
@@ -32,8 +32,8 @@ The design notes in that repo say the globe carries the drama and the panels sta
 ## What this home leaves out
 
 - Am I affected, Agents, Pricing, and the Valyu mark. Those belong to the reference product.
-- The 24 hour, 7 day, and 30 day switch. The NearCrawl hot list uses the 14-day feed.
-- Confirmed, reported, and claimed. A NearCrawl story is breaking or it is not.
+- The 30 day switch. The feed window is 14 days, so the switch is 24h, 7d, and 14d.
+- Confirmed, reported, and claimed. A NearCrawl story is breaking, or it is also hot.
 - A Layers control. The home has one layer, the story pins.
 - Mapbox. The globe is ours.
 - A "Back to my region" button. The spin starts again where the drag stopped. The reference globe has no fly-home control.
@@ -80,19 +80,18 @@ A title can slide through the ticker and also sit in a list. The ticker is one l
 | +----------------------------+                                                 |
 | | Hot in [country]      [x]  |              revolving                          |
 | | Hot where you are.         |                 .---.                           |
-| | Live · 14-day feed         |              .-'     `-.                        |
-| |                            |             /    pin    \                       |
-| |  12                        |            |      *      |                      |
-| |  stories                   |             \          /                        |
-| |                            |              `-.     .-'                        |
-| | [ All ] [ Politics ]       |                 `---'                           |
-| | [ Search this region ]     |                                                 |
-| | -------------------------- |                                                 |
-| | source  Title        2h B  |                                                 |
-| | source  Title        5h    |                                                 |
-| | source  Title        6h B  |                                                 |
-| | source  Title        9h    |  +-------------------------------------------+  |
-| | source  Title        1d    |  | Global Breaking News                   < >|  |
+| | * Live · 14-day feed       |              .-'     `-.                        |
+| |              24h 7d (14d)  |             /    pin    \                       |
+| | STORIES        LAST 14 DAYS|            |      *      |                      |
+| | 12            | bar chart | |             \          /                        |
+| | * Breaking 4  o Also hot 8 |              `-.     .-'                        |
+| | [ Search this region ]     |                 `---'                           |
+| | Daily brief                |                                                 |
+| | ( All 12 ) Politics 3 ...  |                                                 |
+| | BREAKING                   |                                                 |
+| | KY  Title             2h   |                                                 |
+| |     Breaking · one line    |  +-------------------------------------------+  |
+| | ALSO HOT                   |  | Global Breaking News                   < >|  |
 | |                            |  | +-----------+ +-----------+ +-----------+ |  |
 | |                            |  | | src  · 2h | | src  · 6h | | src  · 1d | |  |
 | |                            |  | | Title     | | Title     | | Title     | |  |
@@ -107,64 +106,61 @@ A title can slide through the ticker and also sit in a list. The ticker is one l
 
 The left panel runs from under the top bar to the bottom of the page. The breaking-news dock sits in the globe column, beside the panel. It does not run under the panel.
 
-`B` on a row marks a breaking story in your list. The dock label is "Global Breaking News". It sits on the left of that frame, the way "PATCH NOW" sits on the reference. The cards sit in the same frame. `<` and `>` scroll the cards inside the frame.
+A breaking row paints the word Breaking in the breaking color. The dock label is "Global Breaking News". It sits on the left of that frame, the way "PATCH NOW" sits on the reference. The cards sit in the same frame. `<` and `>` scroll the cards inside the frame.
 
 ## Daily brief
 
-The reference page is a document. The globe is gone. The same top bar stays, and Daily brief is the current destination.
+The brief page is a document. The globe is gone. The same top bar stays, and Daily brief is the current destination.
 
-The live page at [globalhackmap.vercel.app/brief](https://globalhackmap.vercel.app/brief) reads top to bottom:
+The list is the device country, the same hot list as the left panel, cut to the last 48 hours. Breaking stories are the first group. Also hot stories are the second group.
 
-- A breadcrumb, Live map, then Daily brief.
-- A small date line, then one large title.
+`/brief/user` is the same document for a visitor who saved preferences. The sample set is the United States, the United Kingdom, Nigeria, and Germany, plus Finance and Disaster. A tracked name can pull one more story. The device-country storm stays on `/brief`.
+
+The page reads top to bottom:
+
+- A breadcrumb: Live map, then Daily brief.
+- A date line, then one large title: what is hot in that country in the last 48 hours.
 - One byline with the source count and the time.
-- One opening paragraph.
-- Three actions: Open the live map, Copy as a thread, and Read the full report.
-- One count, then groups. Each group is a label and a number: Critical, High, and Watch.
-- Each item is a title, one paragraph, a "What to do" line, and source links.
-- The page ends with a morning-delivery note and a share note.
+- One opening paragraph. It uses the first story descriptions.
+- Three actions: Open the live map, Copy as a thread, and Read the full report. The report link moves to the list on this page.
+- A count card. The large number is the story count. Breaking, also hot, and sources split it. Politics, finance, disaster, and shares sit under that split.
+- A dotted world map. Pins mark the stories in the list. A breaking pin is solid red. An also-hot pin is hollow.
+- Numbered rows. Each row has a title, the article body, the source name, and the source host.
+- A side rail. Copy link and Open the live map sit in the morning card. Copy link, Post, LinkedIn, and More sit in the share card.
 
-Our page keeps the document shape and drops the actions we do not have. There is no thread export, no second report, and no morning bot. The one button is Open the live map.
-
-The brief is the device country, the same hot list as the left panel. Breaking stories are the first group. The other hot stories are the second group. Each item is a title, one sentence, and the source. A news item has no "What to do" line.
-
-A cited opening paragraph is not a route yet. The page can ship from the hot list. That paragraph waits until a later answer route writes it.
+There is no Slack bot and no RSS feed. Those belong to the reference product. A story row has no "What to do" box.
 
 ```text
 +--------------------------------------------------------------------------------+
 | (o) NearCrawl   Powered by Geoapify   © OpenStreetMap                          |
-|                                                                                |
 | [ LIVE  Title rolls in ]     Map   ( Daily brief )   GH   [ Sign up ]          |
 +--------------------------------------------------------------------------------+
-|                                                                                |
 | Live map  >  Daily brief                                                       |
 |                                                                                |
-| DAILY BRIEF  ·  [weekday] [date]  ·  [country]                                 |
+| DAILY BRIEF  ·  SUNDAY 8 NOVEMBER          +------------------------------+    |
+|                                            | STORIES      LAST 48 HOURS   |    |
+| What is hot in Japan                       |  5                           |    |
+| in the last 48 hours                       |  in 1 country                |    |
+|                                            | Breaking | Also hot | Sources|    |
+| From 5 sources in Japan, 8 Nov 2026.       |    2     |    3     |   5    |    |
+|                                            | Politics                  2  |    |
+| The last 48 hours in Japan turn on 5 ...   | Finance                   1  |    |
+|                                            | Disaster                  2  |    |
+| [ Open the live map ] [ Copy as a thread ] | Shares                   95  |    |
+| Read the full report                       +------------------------------+    |
 |                                                                                |
-| What is hot in [country]                                                       |
+| +------------------------------------------------------------------------+     |
+| |  dotted world map                         red pins, hollow pins        |     |
+| +------------------------------------------------------------------------+     |
+| WHERE THE STORIES ARE                                                          |
 |                                                                                |
-| One opening paragraph. The hot stories in this country, in a few sentences.    |
-|                                                                                |
-| [ Open the live map ]                                                          |
-|                                                                                |
-| 12 stories                                                                     |
-|                                                                                |
-| BREAKING  3                                                                    |
-|                                                                                |
-| Title of a story                                                               |
-| One sentence from the description.                                             |
-| source  ·  2h                                                                  |
-|                                                                                |
-| Title of a story                                                               |
-| One sentence from the description.                                             |
-| source  ·  6h                                                                  |
-|                                                                                |
-| ALSO HOT  9                                                                    |
-|                                                                                |
-| Title of a story                                                               |
-| One sentence from the description.                                             |
-| source  ·  9h                                                                  |
-|                                                                                |
+| BREAKING                              2          GET THIS EVERY MORNING        |
+| 01  Title                                          [ Copy link ]               |
+|     The article body, a short paragraph.           [ Open the live map ]       |
+|     Kyodo   english.kyodonews.net                  SHARE TODAY'S BRIEF         |
+|                                                    [ Copy link ] [ Post ]      |
+|                                                    [ LinkedIn ]  [ More ]      |
+| ALSO HOT                              3                                        |
 +--------------------------------------------------------------------------------+
 ```
 
@@ -185,6 +181,6 @@ A cited opening paragraph is not a route yet. The page can ship from the hot lis
 Follow the reference, with NearCrawl words.
 
 - The page background is near black. Panels are dark glass. Text is off-white. Secondary text is gray.
-- One color means breaking. No second status color on this screen.
-- One large number in the left panel. The label under it says stories.
+- One color means breaking. Also hot uses a hollow mark. Topic words stay gray.
+- One large number in the left panel. The label says stories. A bar chart sits beside it. Breaking and also hot split that number.
 - Body text stays small. The country name and the brief title are the only large titles.

@@ -2,14 +2,15 @@ import { CATEGORY, CATEGORY_LABEL, type Category } from '../fixtures/home.fixtur
 
 type HotCategoryChipsProps = {
   category: Category
+  counts: Record<Category, number>
   onSelect: (category: Category) => void
 }
 
 const CATEGORIES = [CATEGORY.ALL, CATEGORY.POLITICS, CATEGORY.FINANCE, CATEGORY.DISASTER] as const
 
-export function HotCategoryChips({ category, onSelect }: HotCategoryChipsProps) {
+export function HotCategoryChips({ category, counts, onSelect }: HotCategoryChipsProps) {
   return (
-    <div className="flex flex-wrap gap-1.5">
+    <div className="flex flex-wrap gap-1" role="group" aria-label="Topics">
       {CATEGORIES.map((item) => {
         const selected = item === category
         return (
@@ -20,11 +21,12 @@ export function HotCategoryChips({ category, onSelect }: HotCategoryChipsProps) 
             onClick={() => onSelect(item)}
             className={
               selected
-                ? 'rounded-full bg-ink px-2.5 py-1 font-mono text-[10px] tracking-wide text-space uppercase'
-                : 'rounded-full px-2.5 py-1 font-mono text-[10px] tracking-wide text-ink-3 uppercase hover:bg-white/5'
+                ? 'rounded-full bg-ink px-3 py-1 text-[13px] text-space'
+                : 'rounded-full px-3 py-1 text-[13px] text-ink-3 hover:text-ink'
             }
           >
             {CATEGORY_LABEL[item]}
+            <span className={selected ? 'ml-1.5 text-space' : 'ml-1.5 text-ink-4'}>{counts[item]}</span>
           </button>
         )
       })}

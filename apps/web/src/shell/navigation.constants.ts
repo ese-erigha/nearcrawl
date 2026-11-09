@@ -1,6 +1,7 @@
 export const PATH = {
   MAP: '/',
   BRIEF: '/brief',
+  BRIEF_USER: '/brief/user',
 } as const
 
 export type Path = (typeof PATH)[keyof typeof PATH]
