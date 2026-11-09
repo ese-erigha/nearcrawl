@@ -1,6 +1,6 @@
 import { X } from '@phosphor-icons/react'
 
-import { articleAge, articleCountry, articleTopic, type Article } from '../fixtures/home.fixture.ts'
+import { articleAge, articleCountry, articleTopic, type Article } from '../articles/article.ts'
 
 type StoryPanelProps = {
   story: Article

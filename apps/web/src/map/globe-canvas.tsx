@@ -4,7 +4,7 @@ import { createAtlasGl, type AtlasGl } from './atlas-gl.ts'
 import atlasUrl from './atlas.webp'
 import reliefUrl from './earth-relief.jpg'
 import lightsUrl from './earth-night.jpg'
-import type { Article } from '../fixtures/home.fixture.ts'
+import type { Article } from '../articles/article.ts'
 import { createGlobeSky, type GlobeSky } from './globe-sky.ts'
 import {
   FLY_HOME_MS,
@@ -13,6 +13,7 @@ import {
   GLOBE_RESUME_MS,
   GLOBE_SPIN_DEGREES_PER_SECOND,
   easeOutCubic,
+  facingBBox,
   focusView,
   frameGlobe,
   homeView,
@@ -36,13 +37,20 @@ type Flight = {
   duration: number
 }
 
+type GlobeHome = {
+  latitude: number
+  longitude: number
+}
+
 type GlobeCanvasProps = {
   stories: Article[]
   insetLeft: number
   insetRight: number
   insetBottom: number
   selectedId: string | null
+  home: GlobeHome | null
   onSelect: (id: string | null) => void
+  onSettle: (box: { west: number; south: number; east: number; north: number }) => void
 }
 
 function shade(z: number): number {
@@ -65,7 +73,7 @@ function fitCanvas(canvas: HTMLCanvasElement, width: number, height: number) {
   }
 }
 
-export function GlobeCanvas({ stories, insetLeft, insetRight, insetBottom, selectedId, onSelect }: GlobeCanvasProps) {
+export function GlobeCanvas({ stories, insetLeft, insetRight, insetBottom, selectedId, home, onSelect, onSettle }: GlobeCanvasProps) {
   const skyRef = useRef<HTMLCanvasElement>(null)
   const markRef = useRef<HTMLCanvasElement>(null)
   const atlasRef = useRef<HTMLCanvasElement>(null)
@@ -76,6 +84,9 @@ export function GlobeCanvas({ stories, insetLeft, insetRight, insetBottom, selec
   const goalRef = useRef({ id: selectedId, serial: 0 })
   const seenGoalRef = useRef(0)
   const onSelectRef = useRef(onSelect)
+  const onSettleRef = useRef(onSettle)
+  const homeRef = useRef(home)
+  const touchedRef = useRef(false)
   const selectedRef = useRef(selectedId)
   const pointerRef = useRef({ x: 0, y: 0, moved: false })
   const draggingRef = useRef(false)
@@ -98,9 +109,17 @@ export function GlobeCanvas({ stories, insetLeft, insetRight, insetBottom, selec
 
   useEffect(() => {
     onSelectRef.current = onSelect
+    onSettleRef.current = onSettle
     selectedRef.current = selectedId
     goalRef.current = { id: selectedId, serial: goalRef.current.serial + 1 }
-  }, [onSelect, selectedId])
+  }, [onSelect, onSettle, selectedId])
+
+  useEffect(() => {
+    homeRef.current = home
+    if (!home || touchedRef.current) return
+    viewRef.current.rotation = -home.longitude
+    viewRef.current.latitude = home.latitude
+  }, [home])
 
   useEffect(() => {
     let cancelled = false
@@ -133,7 +152,13 @@ export function GlobeCanvas({ stories, insetLeft, insetRight, insetBottom, selec
     if (!context) return
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     const offsetHours = -new Date().getTimezoneOffset() / 60
-    viewRef.current.rotation = -Math.max(-150, Math.min(150, offsetHours * 15))
+    const place = homeRef.current
+    if (place) {
+      viewRef.current.rotation = -place.longitude
+      viewRef.current.latitude = place.latitude
+    } else {
+      viewRef.current.rotation = -Math.max(-150, Math.min(150, offsetHours * 15))
+    }
     startedRef.current = performance.now()
     let frame = 0
     let last = performance.now()
@@ -293,6 +318,7 @@ export function GlobeCanvas({ stories, insetLeft, insetRight, insetBottom, selec
         className="absolute inset-0 h-full w-full cursor-grab touch-none active:cursor-grabbing"
         aria-label="Revolving globe"
         onPointerDown={(event) => {
+          touchedRef.current = true
           draggingRef.current = true
           pointerRef.current = { x: event.clientX, y: event.clientY, moved: false }
           lastXRef.current = event.clientX
@@ -324,7 +350,10 @@ export function GlobeCanvas({ stories, insetLeft, insetRight, insetBottom, selec
           if (event.currentTarget.hasPointerCapture(event.pointerId)) {
             event.currentTarget.releasePointerCapture(event.pointerId)
           }
-          if (moved) return
+          if (moved) {
+            onSettleRef.current(facingBBox(viewRef.current))
+            return
+          }
           const rect = event.currentTarget.getBoundingClientRect()
           const x = event.clientX - rect.left
           const y = event.clientY - rect.top

@@ -1,4 +1,4 @@
-import type { Article } from '../fixtures/home.fixture.ts'
+import type { Article } from '../articles/article.ts'
 import rawBorders from './country-borders.json' with { type: 'json' }
 import { project } from './globe-math.ts'
 

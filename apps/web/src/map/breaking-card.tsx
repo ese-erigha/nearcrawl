@@ -1,4 +1,4 @@
-import { articleAge, articleCountry, type Article } from '../fixtures/home.fixture.ts'
+import { articleAge, articleCountry, type Article } from '../articles/article.ts'
 
 type BreakingCardProps = {
   story: Article

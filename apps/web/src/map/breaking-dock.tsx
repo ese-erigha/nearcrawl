@@ -1,20 +1,20 @@
 import { CaretLeft, CaretRight } from '@phosphor-icons/react'
 import { useRef } from 'react'
 
-import { listGlobalBreaking } from '../fixtures/home.fixture.ts'
+import type { Article } from '../articles/article.ts'
 import { HOT_PANEL_INSET } from './hot-panel.tsx'
 import { DETAIL_MAP_INSET } from './globe-math.ts'
 import { BreakingCard } from './breaking-card.tsx'
 
 type BreakingDockProps = {
+  stories: Article[]
   panelOpen: boolean
   detailOpen: boolean
   onSelect: (id: string) => void
 }
 
-export function BreakingDock({ panelOpen, detailOpen, onSelect }: BreakingDockProps) {
+export function BreakingDock({ stories, panelOpen, detailOpen, onSelect }: BreakingDockProps) {
   const scrollerRef = useRef<HTMLDivElement>(null)
-  const stories = listGlobalBreaking()
 
   const scrollByCard = (direction: -1 | 1) => {
     const scroller = scrollerRef.current

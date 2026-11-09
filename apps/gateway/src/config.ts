@@ -71,16 +71,21 @@ const gatewayConfigSchema = z
     DATABASE_URL: requiredText('DATABASE_URL'),
     NEON_REALTIME_URL: requiredText('NEON_REALTIME_URL'),
     NEON_REALTIME_SECRET: requiredText('NEON_REALTIME_SECRET'),
-    SENTRY_DSN: requiredText('SENTRY_DSN'),
+    SENTRY_DSN: z.string().trim().optional().default(''),
     SENTRY_ENVIRONMENT: requiredText('SENTRY_ENVIRONMENT'),
     SPATIAL_NEWS_CAP: positiveInt('SPATIAL_NEWS_CAP'),
     CATEGORY_ARTICLES_DEFAULT: positiveInt('CATEGORY_ARTICLES_DEFAULT'),
     CATEGORY_ARTICLES_CAP: positiveInt('CATEGORY_ARTICLES_CAP'),
     FEED_RETENTION_DAYS: positiveInt('FEED_RETENTION_DAYS'),
     HOT_NEWS_CAP: positiveInt('HOT_NEWS_CAP'),
-    INFERENCE_URL: requiredText('INFERENCE_URL').refine(isInferenceOrigin, {
-      error: 'INFERENCE_URL is an origin with no path',
-    }),
+    INFERENCE_URL: z
+      .string()
+      .trim()
+      .optional()
+      .default('')
+      .refine((value) => value === '' || isInferenceOrigin(value), {
+        error: 'INFERENCE_URL is an origin with no path',
+      }),
     INFERENCE_SECRET: requiredText('INFERENCE_SECRET'),
   })
   .refine((value) => value.CATEGORY_ARTICLES_DEFAULT <= value.CATEGORY_ARTICLES_CAP, {

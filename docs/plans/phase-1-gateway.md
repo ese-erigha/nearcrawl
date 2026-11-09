@@ -35,6 +35,9 @@ Phase 1 news is one shared feed. These routes follow the catalog pattern:
 - `GET /health`
 - `GET /api/spatial/news`
 - `POST /api/spatial/news/live`
+- `GET /api/articles?country=`
+- `GET /api/articles/breaking`
+- `GET /api/articles/mentions?q=`
 - `GET /api/articles/:id`
 - `POST /api/articles/:id/live`
 
@@ -130,6 +133,14 @@ Errors:
 | --- | --- |
 | 400 | Same bbox and category rules as `GET /api/spatial/news`. |
 | 503 | The live query sealer is not configured. Body is `{ "error": "Live query sealer is not configured" }`. |
+
+### `GET /api/articles`
+
+The hot list for one country. `country` is a two-letter code. `windowHours` is optional. The default window is `FEED_RETENTION_DAYS`. The maximum is that same window. Order is breaking, then share count, then `published_at`. The cap is `HOT_NEWS_CAP`.
+
+`GET /api/articles/breaking` is the world breaking list for the ticker and the dock. The window is the feed retention. Order is `published_at` descending.
+
+`GET /api/articles/mentions?q=` finds stories whose title, description, tags, or body contain `q` as an English word. `q` is 2 to 80 characters. `windowHours` uses the same limit as the hot list. The user brief calls this once for each tracked name.
 
 ### `GET /api/articles/:id`
 

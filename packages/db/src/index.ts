@@ -1,16 +1,20 @@
 export {
   articleByIdSql,
+  breakingNewsSql,
   categoryArticlesSql,
   compileSql,
   existingApitubeIdsSql,
   hotNewsSql,
+  mentionNewsSql,
   purgeArticlesSql,
   spatialNewsSql,
   upsertArticleSql,
   upsertArticlesSql,
   type CompiledSql,
   type FiledCategoryWrite,
+  type BreakingNewsStatement,
   type HotNewsStatement,
+  type MentionNewsStatement,
   type SpatialNewsStatement,
   type UpsertArticle,
 } from './articles.sql.ts'
@@ -27,7 +31,9 @@ export {
   type ArticleRow,
   type BBox,
   type FiledTopic,
+  type BreakingNewsQuery,
   type HotNewsQuery,
+  type MentionNewsQuery,
   type SpatialNewsQuery,
 } from './article.repository.ts'
 export {

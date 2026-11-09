@@ -1,6 +1,5 @@
-import { articleAge, listGlobalBreaking, type Article } from '../fixtures/home.fixture.ts'
-
-const STORIES = listGlobalBreaking()
+import { articleAge, type Article } from '../articles/article.ts'
+import { useLiveNews } from '../articles/use-live-news.ts'
 
 function StoryRun({ stories, hidden }: { stories: Article[]; hidden?: boolean }) {
   return (
@@ -20,6 +19,8 @@ function StoryRun({ stories, hidden }: { stories: Article[]; hidden?: boolean })
 }
 
 export function Ticker() {
+  const { breaking } = useLiveNews()
+  const STORIES = breaking
   if (STORIES.length === 0) return null
 
   return (

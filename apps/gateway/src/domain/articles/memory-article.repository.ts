@@ -1,6 +1,6 @@
 import { CATEGORY } from 'db'
 
-import type { ArticleRepository, ArticleRow, HotNewsQuery, SpatialNewsQuery } from './articles.types.ts'
+import type { ArticleRepository, ArticleRow, BreakingNewsQuery, HotNewsQuery, MentionNewsQuery, SpatialNewsQuery } from './articles.types.ts'
 
 const FIXTURE: ArticleRow[] = [
   {
@@ -65,6 +65,26 @@ export class MemoryArticleRepository implements ArticleRepository {
     const matches = this.rows.filter((row) => hotMatch(row, query)).sort(hotFirst)
     return Promise.resolve(matches.slice(0, query.limit))
   }
+
+  listBreaking(query: BreakingNewsQuery): Promise<ArticleRow[]> {
+    const matches = this.rows.filter((row) => breakingMatch(row, query)).sort(newestFirst)
+    return Promise.resolve(matches.slice(0, query.limit))
+  }
+
+  listMentions(query: MentionNewsQuery): Promise<ArticleRow[]> {
+    const matches = this.rows.filter((row) => mentionMatch(row, query)).sort(hotFirst)
+    return Promise.resolve(matches.slice(0, query.limit))
+  }
+}
+
+function breakingMatch(row: ArticleRow, query: BreakingNewsQuery): boolean {
+  return !row.is_duplicate && row.is_breaking && row.published_at.getTime() >= query.publishedAfter.getTime()
+}
+
+function mentionMatch(row: ArticleRow, query: MentionNewsQuery): boolean {
+  if (row.is_duplicate || row.published_at.getTime() < query.publishedAfter.getTime()) return false
+  const haystack = `${row.title} ${row.description ?? ''} ${row.body}`.toLowerCase()
+  return haystack.includes(query.text.trim().toLowerCase())
 }
 
 function hotMatch(row: ArticleRow, query: HotNewsQuery): boolean {

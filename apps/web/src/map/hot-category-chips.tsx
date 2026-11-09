@@ -1,4 +1,4 @@
-import { CATEGORY, CATEGORY_LABEL, type Category } from '../fixtures/home.fixture.ts'
+import { CATEGORY, CATEGORY_LABEL, type Category } from '../articles/topics.ts'
 
 type HotCategoryChipsProps = {
   category: Category

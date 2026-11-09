@@ -1,4 +1,4 @@
-import { CATEGORY, TOPIC, type Category } from '../fixtures/home.fixture.ts'
+import { CATEGORY, TOPIC, type Category } from '../articles/topics.ts'
 
 export const FEED_WINDOW = {
   DAY: '24h',

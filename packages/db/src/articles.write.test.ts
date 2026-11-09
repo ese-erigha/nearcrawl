@@ -6,7 +6,9 @@ import {
   compileSql,
   existingApitubeIdsSql,
   purgeArticlesSql,
+  breakingNewsSql,
   hotNewsSql,
+  mentionNewsSql,
   spatialNewsSql,
   upsertArticlesSql,
   type UpsertArticle,
@@ -126,6 +128,41 @@ describe('hotNewsSql', () => {
     assert.equal(compiled.sql.includes('now()'), false)
     assert.equal(compiled.params.includes('FR'), true)
     assert.equal(compiled.params.includes(20), true)
+  })
+})
+
+describe('breakingNewsSql', () => {
+  it('when the list is breaking news, then a duplicate stays out and the newest row comes first', () => {
+    const compiled = compileSql(
+      breakingNewsSql({
+        publishedAfter: new Date('2026-10-01T00:00:00.000Z'),
+        limit: 20,
+      }),
+    )
+
+    assert.match(compiled.sql, /is_breaking = true/)
+    assert.match(compiled.sql, /is_duplicate = false/)
+    assert.match(compiled.sql, /published_at DESC, articles.id DESC/)
+    assert.equal(compiled.sql.includes('now()'), false)
+    assert.equal(compiled.params.includes(20), true)
+  })
+})
+
+describe('mentionNewsSql', () => {
+  it('when the text is a name, then the statement uses the search indexes', () => {
+    const compiled = compileSql(
+      mentionNewsSql({
+        text: 'Osaka',
+        publishedAfter: new Date('2026-10-01T00:00:00.000Z'),
+        limit: 20,
+      }),
+    )
+
+    assert.match(compiled.sql, /search_vector @@/)
+    assert.match(compiled.sql, /to_tsvector\('english'::regconfig, articles\.body\) @@/)
+    assert.match(compiled.sql, /is_duplicate = false/)
+    assert.equal(compiled.params.includes('Osaka'), true)
+    assert.equal(compiled.sql.includes('now()'), false)
   })
 })
 

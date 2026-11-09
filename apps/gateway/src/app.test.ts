@@ -93,6 +93,23 @@ describe('gateway routes', () => {
     assert.equal(response.status, 400)
   })
 
+  it('when the window is longer than the feed, then the hot list returns 400', async () => {
+    const response = await request('/api/articles?country=JP&windowHours=900')
+    assert.equal(response.status, 400)
+  })
+
+  it('when the breaking list loads, then the response is an article list', async () => {
+    const response = await request('/api/articles/breaking')
+    assert.equal(response.status, 200)
+    const body = (await response.json()) as { articles: Article[] }
+    assert.ok(Array.isArray(body.articles))
+  })
+
+  it('when the mention text is one letter, then the mention list returns 400', async () => {
+    const response = await request('/api/articles/mentions?q=a')
+    assert.equal(response.status, 400)
+  })
+
   it('returns article not found for an unknown id', async () => {
     const response = await request('/api/articles/00000000-0000-4000-8000-000000000000')
     assert.equal(response.status, 404)

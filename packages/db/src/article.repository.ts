@@ -1,8 +1,10 @@
 import {
   articleByIdSql,
+  breakingNewsSql,
   categoryArticlesSql,
   existingApitubeIdsSql,
   hotNewsSql,
+  mentionNewsSql,
   purgeArticlesSql,
   spatialNewsSql,
   upsertArticlesSql,
@@ -25,6 +27,17 @@ export type SpatialNewsQuery = {
 
 export type HotNewsQuery = {
   countryCode: string
+  publishedAfter: Date
+  limit: number
+}
+
+export type BreakingNewsQuery = {
+  publishedAfter: Date
+  limit: number
+}
+
+export type MentionNewsQuery = {
+  text: string
   publishedAfter: Date
   limit: number
 }
@@ -101,6 +114,25 @@ export class DbArticleRepository {
     return this.read(
       hotNewsSql({
         countryCode: query.countryCode,
+        publishedAfter: query.publishedAfter,
+        limit: query.limit,
+      }),
+    )
+  }
+
+  async listBreaking(query: BreakingNewsQuery): Promise<ArticleRow[]> {
+    return this.read(
+      breakingNewsSql({
+        publishedAfter: query.publishedAfter,
+        limit: query.limit,
+      }),
+    )
+  }
+
+  async listMentions(query: MentionNewsQuery): Promise<ArticleRow[]> {
+    return this.read(
+      mentionNewsSql({
+        text: query.text,
         publishedAfter: query.publishedAfter,
         limit: query.limit,
       }),

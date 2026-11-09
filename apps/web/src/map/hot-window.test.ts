@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 
-import { CATEGORY, TOPIC } from '../fixtures/home.fixture.ts'
+import { CATEGORY, TOPIC } from '../articles/topics.ts'
 import { FEED_WINDOW, categoryCounts, storiesInWindow, storyBars } from './hot-window.ts'
 
 const NOW = Date.parse('2026-11-08T12:00:00.000Z')

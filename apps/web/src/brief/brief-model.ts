@@ -1,16 +1,8 @@
-import {
-  ARTICLES,
-  CATEGORY,
-  CATEGORY_LABEL,
-  SAVED_PREFERENCES,
-  TOPIC,
-  VISITOR_COUNTRY,
-  articleCountry,
-  listCountryStories,
-  type Article,
-} from '../fixtures/home.fixture.ts'
+import { regionName, type Article } from '../articles/article.ts'
+import { CATEGORY, CATEGORY_LABEL, TOPIC } from '../articles/topics.ts'
 
-export const BRIEF_WINDOW_MS = 48 * 3_600_000
+export const BRIEF_WINDOW_HOURS = 48
+export const BRIEF_WINDOW_MS = BRIEF_WINDOW_HOURS * 3_600_000
 
 const TOPIC_ROWS = [
   { id: TOPIC.POLITICS, label: CATEGORY_LABEL[CATEGORY.POLITICS] },
@@ -86,26 +78,33 @@ export function storyMatchesPreferences(story: BriefStory, preferences: SavedPre
   return preferences.trackedNames.some((name) => name.trim().length > 0 && haystack.includes(name.trim().toLowerCase()))
 }
 
-export function buildBrief(now = Date.now()): BriefView {
-  const stories = storiesInBrief(listCountryStories(CATEGORY.ALL, ''), now)
-  const sourceWord = stories.length === 1 ? 'source' : 'sources'
-  const shareTitle = `What is hot in ${VISITOR_COUNTRY}, ${shortDate(now)}`
-  return assembleBrief(stories, now, {
-    headline: `What is hot in ${VISITOR_COUNTRY} in the last 48 hours`,
-    byline: `From ${new Set(stories.map((story) => story.sourceName)).size} ${sourceWord} in ${VISITOR_COUNTRY}, ${compiledLabel(now)}.`,
-    morningNote: `The ${VISITOR_COUNTRY} brief is this page. Copy the link, or open the same list on the map.`,
-    leadPlace: VISITOR_COUNTRY,
+export function buildCountryBrief(stories: Article[], placeName: string | null, now = Date.now()): BriefView {
+  const inWindow = storiesInBrief(stories, now)
+  const sourceWord = inWindow.length === 1 ? 'source' : 'sources'
+  const sourceCount = new Set(inWindow.map((story) => story.sourceName)).size
+  const place = placeName ?? 'the world'
+  const shareTitle = `What is hot in ${place}, ${shortDate(now)}`
+  const byline = placeName
+    ? `From ${sourceCount} ${sourceWord} in ${placeName}, ${compiledLabel(now)}.`
+    : `From ${sourceCount} ${sourceWord}, ${compiledLabel(now)}.`
+  return assembleBrief(inWindow, now, {
+    headline: placeName ? `What is hot in ${placeName} in the last 48 hours` : 'What is hot in the last 48 hours',
+    byline,
+    morningNote: placeName
+      ? `The ${placeName} brief is this page. Copy the link, or open the same list on the map.`
+      : 'This brief is the breaking list. Copy the link, or open the same list on the map.',
+    leadPlace: place,
     shareTitle,
   })
 }
 
-export function buildUserBrief(preferences: SavedPreferences = SAVED_PREFERENCES, now = Date.now()): BriefView {
-  const stories = storiesInBrief(ARTICLES, now).filter((story) => storyMatchesPreferences(story, preferences))
-  const countries = preferences.homeCountryCodes.map((code) => countryName(code))
+export function buildUserBrief(stories: Article[], preferences: SavedPreferences, now = Date.now()): BriefView {
+  const matched = storiesInBrief(stories, now).filter((story) => storyMatchesPreferences(story, preferences))
+  const countries = preferences.homeCountryCodes.map((code) => regionName(code))
   const topics = TOPIC_ROWS.filter((topic) => preferences.categoryIds.includes(topic.id)).map((topic) => topic.label)
   const names = preferences.trackedNames.filter((name) => name.trim().length > 0)
   const shareTitle = `What is hot for you, ${shortDate(now)}`
-  return assembleBrief(stories, now, {
+  return assembleBrief(matched, now, {
     headline: 'What is hot for you in the last 48 hours',
     byline: `${joinWords(countries)}. ${joinWords(topics)}. Tracking ${joinWords(names)}. ${compiledLabel(now)}.`,
     morningNote: 'This brief follows your saved countries, topics, and names.',
@@ -148,11 +147,6 @@ function assembleBrief(
     shareTitle: copy.shareTitle,
     shareText: `${copy.shareTitle}. ${lead}`,
   }
-}
-
-function countryName(code: string): string {
-  const story = ARTICLES.find((item) => item.countryCodes.includes(code))
-  return story ? articleCountry(story) : code
 }
 
 function joinWords(items: string[]): string {

@@ -41,11 +41,11 @@ The design notes in that repo say the globe carries the drama and the panels sta
 ## What the visitor gets
 
 1. The page reads the device location.
-2. `GET /api/articles?country=` loads the hot list for that country. Breaking stories come first, then stories with more shares, then newer stories.
-3. The globe opens on that country and revolves. A drag pauses it. The spin starts again 4 seconds after the drag ends, from that same place.
+2. `GET /api/articles?country=` loads the hot list for that country. Breaking stories come first, then stories with more shares, then newer stories. `windowHours=48` is the brief window. The default window is the 14-day feed.
+3. The globe opens on that country and revolves. A drag pauses it. The spin starts again 4 seconds after the drag ends, from that same place. The first pins come from `GET /api/spatial/news` for the whole world. A drag loads the box in view from the same route.
 4. The left list is that hot list. Every visitor in the country sees the same list and the same order. A drag does not replace this list. After sign-up, this list follows the home countries, the topics, and the tracked names.
-5. A search uses `POST /api/search`. Search does not require an account.
-6. Daily brief opens the public brief for that country. It does not require an account.
+5. The search field filters the loaded hot list. It does not call the inference search.
+6. Daily brief opens the public brief for that country. It calls `GET /api/articles?country=&windowHours=48`. It does not require an account. When the device location fails, the brief uses `GET /api/articles/breaking`. `/brief/user` calls the same country route for each saved country, and `GET /api/articles/mentions?q=` for each tracked name.
 7. Sign up is visible. It does not block the globe, the list, the search, or the brief.
 
 ## Credit
@@ -112,7 +112,7 @@ A breaking row paints the word Breaking in the breaking color. The dock label is
 
 The brief page is a document. The globe is gone. The same top bar stays, and Daily brief is the current destination.
 
-The list is the device country, the same hot list as the left panel, cut to the last 48 hours. Breaking stories are the first group. Also hot stories are the second group.
+The list is the device country from `GET /api/articles?country=&windowHours=48`. Breaking stories are the first group. Also hot stories are the second group. When the device location fails, the list is the breaking feed, cut to 48 hours.
 
 `/brief/user` is the same document for a visitor who saved preferences. The sample set is the United States, the United Kingdom, Nigeria, and Germany, plus Finance and Disaster. A tracked name can pull one more story. The device-country storm stays on `/brief`.
 
@@ -171,7 +171,7 @@ There is no Slack bot and no RSS feed. Those belong to the reference product. A 
 - **Daily brief.** Opens the document above. The brief is the hot list for the device country. Breaking stories come first. The other hot stories follow.
 - **GitHub.** The mark in the pill. It opens the NearCrawl repository in a new tab.
 - **Sign up.** A white button. The home does not wait for it. The account form is a later screen.
-- **Left panel.** Before sign-up, the country comes from the device location and the list is the hot list for that country. After sign-up, the list follows the home countries, the topics, and the tracked names. The large number is the size of that list. A category chip filters it. Search calls `POST /api/search`.
+- **Left panel.** Before sign-up, the country comes from the device location and the list is the hot list for that country. After sign-up, the list follows the home countries, the topics, and the tracked names. The large number is the size of that list. A category chip filters it. The search field filters that loaded list.
 - **Name and credit.** Top left. "Powered by Geoapify" links to Geoapify. "© OpenStreetMap contributors" links to the OpenStreetMap copyright page.
 - **Globe.** It revolves until a press, a drag, or a scroll. The spin starts again 4 seconds later, from the place where it stopped. The first frame faces the device country. A breaking pin uses one urgent color. Other pins stay neutral.
 - **Bottom dock.** One frame in the globe column. The left panel continues beside it to the bottom of the page. The label is "Global Breaking News". The cards sit in that frame. Arrows scroll the cards inside it.

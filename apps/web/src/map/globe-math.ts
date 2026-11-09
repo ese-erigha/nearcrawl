@@ -80,6 +80,23 @@ export function focusView(longitude: number, latitude: number): GlobeView {
   return { rotation: -longitude, latitude, radiusScale: FOCUS_RADIUS_SCALE }
 }
 
+export function facingBBox(view: GlobeView): { west: number; south: number; east: number; north: number } {
+  const scale = Math.max(view.radiusScale, 1)
+  const halfLon = 90 / scale
+  const halfLat = 50 / scale
+  const centerLon = wrapLongitude(-view.rotation)
+  return {
+    west: wrapLongitude(centerLon - halfLon),
+    south: Math.max(-90, view.latitude - halfLat),
+    east: wrapLongitude(centerLon + halfLon),
+    north: Math.min(90, view.latitude + halfLat),
+  }
+}
+
+function wrapLongitude(longitude: number): number {
+  return (((longitude + 180) % 360) + 360) % 360 - 180
+}
+
 export function homeView(current: GlobeView): GlobeView {
   return { rotation: current.rotation, latitude: 0, radiusScale: 1 }
 }

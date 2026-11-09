@@ -2,13 +2,8 @@ import { MagnifyingGlass, Newspaper, X } from '@phosphor-icons/react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
-import {
-  CATEGORY,
-  listCountryStories,
-  VISITOR_COUNTRY,
-  type Article,
-  type Category,
-} from '../fixtures/home.fixture.ts'
+import type { Article } from '../articles/article.ts'
+import { CATEGORY, type Category } from '../articles/topics.ts'
 import { PATH } from '../shell/navigation.constants.ts'
 import { HotCategoryChips } from './hot-category-chips.tsx'
 import { HotMetricCard } from './hot-metric-card.tsx'
@@ -35,6 +30,10 @@ const LIST_FILTER = {
 type ListFilter = (typeof LIST_FILTER)[keyof typeof LIST_FILTER]
 
 type HotPanelProps = {
+  title: string
+  subtitle: string
+  stories: Article[]
+  status: 'loading' | 'ready' | 'error'
   onClose: () => void
   selectedId: string | null
   onSelect: (id: string) => void
@@ -46,23 +45,22 @@ function matchesFilter(story: Article, filter: ListFilter): boolean {
   return true
 }
 
-export function HotPanel({ onClose, selectedId, onSelect }: HotPanelProps) {
+export function HotPanel({ title, subtitle, stories, status, onClose, selectedId, onSelect }: HotPanelProps) {
   const [category, setCategory] = useState<Category>(CATEGORY.ALL)
   const [feedWindow, setFeedWindow] = useState<FeedWindow>(FEED_WINDOW.FEED)
   const [filter, setFilter] = useState<ListFilter>(LIST_FILTER.ALL)
   const [query, setQuery] = useState('')
-  const country = listCountryStories(CATEGORY.ALL, '')
-  const inWindow = storiesInWindow(country, feedWindow)
+  const inWindow = storiesInWindow(stories, feedWindow)
   const bars = storyBars(inWindow, feedWindow)
   const breaking = inWindow.filter((story) => story.isBreaking).length
   const afterStatus = inWindow.filter((story) => matchesFilter(story, filter))
   const counts = categoryCounts(afterStatus)
   const needle = query.trim().toLowerCase()
-  const stories = afterStatus.filter(
+  const visible = afterStatus.filter(
     (story) => matchesCategory(story, category) && (needle.length === 0 || story.title.toLowerCase().includes(needle)),
   )
-  const breakingStories = stories.filter((story) => story.isBreaking)
-  const alsoHotStories = stories.filter((story) => !story.isBreaking)
+  const breakingStories = visible.filter((story) => story.isBreaking)
+  const alsoHotStories = visible.filter((story) => !story.isBreaking)
   const toggle = (next: ListFilter) => setFilter((current) => (current === next ? LIST_FILTER.ALL : next))
 
   return (
@@ -72,10 +70,8 @@ export function HotPanel({ onClose, selectedId, onSelect }: HotPanelProps) {
     >
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="font-condensed text-[32px] leading-[0.95] font-bold tracking-[-0.02em] text-ink">
-            Hot in {VISITOR_COUNTRY}
-          </h1>
-          <p className="mt-2 text-[14px] leading-snug text-ink-3">Hot where you are.</p>
+          <h1 className="font-condensed text-[32px] leading-[0.95] font-bold tracking-[-0.02em] text-ink">{title}</h1>
+          <p className="mt-3 text-[14px] leading-snug text-ink-3">{subtitle}</p>
         </div>
         <button
           type="button"
@@ -105,7 +101,9 @@ export function HotPanel({ onClose, selectedId, onSelect }: HotPanelProps) {
         onAlsoHot={() => toggle(LIST_FILTER.ALSO_HOT)}
       />
       <p className="mt-3 text-[12px] leading-relaxed text-ink-4">
-        The number is every story in this country for that window. A status filters the list.
+        {status === 'loading' ? 'Loading stories.' : null}
+        {status === 'error' ? 'The story list did not load.' : null}
+        {status === 'ready' ? 'The number is the hot list for that window. A status filters the list.' : null}
       </p>
       <label className="relative mt-3 block">
         <span className="sr-only">Search this region</span>
@@ -134,6 +132,9 @@ export function HotPanel({ onClose, selectedId, onSelect }: HotPanelProps) {
       <div className="mt-3">
         <HotCategoryChips category={category} counts={counts} onSelect={setCategory} />
       </div>
+      {status === 'ready' && visible.length === 0 ? (
+        <p className="mt-4 text-[13px] text-ink-3">No stories in this window.</p>
+      ) : null}
       <div className="mt-4 space-y-4">
         {breakingStories.length > 0 ? (
           <section aria-label="Breaking">

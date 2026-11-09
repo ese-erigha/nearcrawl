@@ -26,6 +26,16 @@ describe('gateway config', () => {
     )
   })
 
+  it('when the inference url is empty, then the news config still loads', () => {
+    const config = createConfig({ ...limits, INFERENCE_URL: '' })
+    assert.equal(config.inferenceUrl, '')
+  })
+
+  it('when the sentry dsn is empty, then the config leaves it blank', () => {
+    const config = createConfig({ ...limits, SENTRY_DSN: '' })
+    assert.equal(config.sentryDsn, '')
+  })
+
   it('when the database url is missing, then the config read throws', () => {
     assert.throws(() => createConfig({ ...limits, DATABASE_URL: '' }), /DATABASE_URL is required/)
   })

@@ -1,4 +1,4 @@
-import { articleAge, articleTopic, type Article } from '../fixtures/home.fixture.ts'
+import { articleAge, articleTopic, type Article } from '../articles/article.ts'
 
 type HotStoryRowProps = {
   story: Article

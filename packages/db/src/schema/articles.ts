@@ -71,6 +71,9 @@ export const articles = pgTable(
     uniqueIndex('articles_apitube_id_key').on(table.apitubeId),
     index('articles_location_gix').using('gist', table.location),
     index('articles_search_vector_idx').using('gin', table.searchVector),
+    index('articles_body_search_idx')
+      .using('gin', sql`to_tsvector('english'::regconfig, ${table.body})`)
+      .where(sql`${table.isDuplicate} = false`),
     index('articles_lat_lng_idx').on(table.latitude, table.longitude),
     index('articles_published_at_idx').on(table.publishedAt),
     index('articles_category_published_at_idx').on(table.categoryId, table.publishedAt.desc()),

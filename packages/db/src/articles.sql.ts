@@ -114,6 +114,46 @@ export function hotNewsSql(input: HotNewsStatement): SQL {
   `
 }
 
+export type BreakingNewsStatement = {
+  publishedAfter: Date
+  limit: number
+}
+
+export function breakingNewsSql(input: BreakingNewsStatement): SQL {
+  return sql`
+    SELECT ${articleColumnsSql}
+    FROM articles
+    WHERE articles.is_breaking = true
+      AND articles.is_duplicate = false
+      AND articles.published_at >= ${input.publishedAfter}::timestamptz
+    ORDER BY articles.published_at DESC, articles.id DESC
+    LIMIT ${input.limit}
+  `
+}
+
+export type MentionNewsStatement = {
+  text: string
+  publishedAfter: Date
+  limit: number
+}
+
+export function mentionNewsSql(input: MentionNewsStatement): SQL {
+  // The english dictionary drops a stop word, so that word matches nothing.
+  const match = sql`websearch_to_tsquery('english'::regconfig, ${input.text})`
+  return sql`
+    SELECT ${articleColumnsSql}
+    FROM articles
+    WHERE articles.is_duplicate = false
+      AND articles.published_at >= ${input.publishedAfter}::timestamptz
+      AND (
+        articles.search_vector @@ ${match}
+        OR to_tsvector('english'::regconfig, articles.body) @@ ${match}
+      )
+    ORDER BY articles.is_breaking DESC, articles.share_count DESC, articles.published_at DESC
+    LIMIT ${input.limit}
+  `
+}
+
 export type FiledCategoryWrite = {
   categoryId: number
   score: number | null

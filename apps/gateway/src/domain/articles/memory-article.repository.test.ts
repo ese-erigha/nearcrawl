@@ -171,4 +171,40 @@ describe('MemoryArticleRepository', () => {
       ['breaking', 'shares'],
     )
   })
+
+  it('when the list is breaking news, then a quiet story stays out', async () => {
+    const repository = new MemoryArticleRepository([
+      row({ id: 'quiet', latitude: 1, longitude: 2, is_breaking: false }),
+      row({ id: 'live', latitude: 1, longitude: 2, is_breaking: true }),
+      row({ id: 'copy', latitude: 1, longitude: 2, is_breaking: true, is_duplicate: true }),
+    ])
+
+    const rows = await repository.listBreaking({
+      publishedAfter: new Date('2026-01-01T00:00:00.000Z'),
+      limit: 20,
+    })
+
+    assert.deepEqual(
+      rows.map((item) => item.id),
+      ['live'],
+    )
+  })
+
+  it('when the text matches the body, then the mention list keeps that story', async () => {
+    const repository = new MemoryArticleRepository([
+      row({ id: 'osaka', latitude: 1, longitude: 2, body: 'The Osaka gates stayed open.' }),
+      row({ id: 'other', latitude: 1, longitude: 2, body: 'The hall stayed closed.' }),
+    ])
+
+    const rows = await repository.listMentions({
+      text: 'Osaka',
+      publishedAfter: new Date('2026-01-01T00:00:00.000Z'),
+      limit: 20,
+    })
+
+    assert.deepEqual(
+      rows.map((item) => item.id),
+      ['osaka'],
+    )
+  })
 })

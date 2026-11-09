@@ -1,4 +1,4 @@
-import { articleAge, type Article } from '../fixtures/home.fixture.ts'
+import { articleAge, type Article } from '../articles/article.ts'
 import { BANNER_HEIGHT, BANNER_WIDTH, type PlacedBanner } from './globe-math.ts'
 
 type PinBannersProps = {

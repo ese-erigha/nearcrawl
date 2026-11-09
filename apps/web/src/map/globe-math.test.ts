@@ -1,7 +1,17 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 
-import { focusView, frameGlobe, homeView, placeBanners, project } from './globe-math.ts'
+import { facingBBox, focusView, frameGlobe, homeView, placeBanners, project } from './globe-math.ts'
+
+describe('facingBBox', () => {
+  it('when the globe faces the prime meridian, then the box is centered on that meridian', () => {
+    const box = facingBBox({ rotation: 0, latitude: 0, radiusScale: 1 })
+    assert.equal(box.west, -90)
+    assert.equal(box.east, 90)
+    assert.equal(box.south, -50)
+    assert.equal(box.north, 50)
+  })
+})
 
 describe('project', () => {
   it('when a point faces the camera, then it sits in front of the globe', () => {
