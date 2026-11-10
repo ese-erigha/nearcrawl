@@ -64,10 +64,9 @@ describe('toNewsItem', () => {
     assert.deepEqual(item?.medtopIds, ['medtop:20000350'])
   })
 
-  it('when the article has no coordinates, then latitude is null', () => {
-    const item = toNewsItem({ ...article, locations_mentioned: [] })
-    assert.equal(item?.latitude, null)
-    assert.equal(item?.longitude, null)
+  it('when the article has no coordinates, then the item is left out', () => {
+    const item = toNewsItem({ ...article, locations_mentioned: [{ lat: null, lng: null }] })
+    assert.equal(item, null)
   })
 
   it('when description is absent and summary has sentences, then the stored description is null', () => {

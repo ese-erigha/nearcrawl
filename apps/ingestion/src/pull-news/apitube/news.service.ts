@@ -113,6 +113,9 @@ export function toNewsItem(value: unknown): NewsItem | null {
     return null
   }
   const point = coordinates(value)
+  if (!point) {
+    return null
+  }
   const topics = newsTopics(value)
   return {
     apitubeId: article.id,
@@ -128,8 +131,8 @@ export function toNewsItem(value: unknown): NewsItem | null {
     sourceHomeUrl: article.source?.home_page_url ?? null,
     sourceCountryName: article.source?.location?.country_name ?? null,
     sourceCountryCode: article.source?.location?.country_code ?? null,
-    latitude: point?.latitude ?? null,
-    longitude: point?.longitude ?? null,
+    latitude: point.latitude,
+    longitude: point.longitude,
     countryCodes: storyCountryCodes(value),
     topics,
     medtopIds: topics.map((topic) => topic.medtopId),

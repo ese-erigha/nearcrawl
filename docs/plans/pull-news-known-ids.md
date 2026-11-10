@@ -54,6 +54,6 @@ The page write stays one batch. Known ids on a fetched page are still updated. T
 
 ## Out of this change
 
-- The pull cron is `*/20 * * * *`. This change does not edit it.
+- The pull cron is off. This change does not edit it.
 - No daily full walk. That walk is the current loop, run on its own schedule, for late-indexed articles and edits past the known page.
 - No change to `published_at.start`.

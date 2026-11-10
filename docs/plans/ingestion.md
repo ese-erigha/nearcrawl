@@ -50,13 +50,13 @@ NearCrawl ingestion is a Worker, so it follows the ingestion client, not the PWA
 
 ## Pull cron
 
-The pull expression is `*/20 * * * *`. It matches `INGESTION_INTERVAL_MINUTES`. That line is in `crons`. Change the cron and the var together. The handler does not sleep and does not call `setInterval`.
+The pull expression is `*/20 * * * *`. It matches `INGESTION_INTERVAL_MINUTES`. That line is off in `wrangler.toml`. Put it back in `crons` to turn the pull on. Change the cron and the var together. The handler does not sleep and does not call `setInterval`.
 
 One invocation does these steps in order.
 
 1. Load `id`, `parent_id`, and `medtop_id` from `categories`. That query is the only category list this app uses. Do not import `categoryCatalog`.
 2. Call `apitube.client.ts` for `GET /v1/news/everything`. Page until a page is empty, or until every item on the page is older than the feed window.
-3. Skip an item with no latitude, no longitude, or a coordinate outside the article checks (`latitude` from -90 to 90, `longitude` from -180 to 180).
+3. Leave out an item with no latitude and longitude. Skip an item whose coordinate is outside the article checks (`latitude` from -90 to 90, `longitude` from -180 to 180). Neither item is written.
 4. File the item, then call `upsertByApitubeId`.
 
 This job does not delete.
@@ -134,7 +134,7 @@ WHERE published_at < now() - make_interval(days => :retention_days);
 
 - `INGESTION_INTERVAL_MINUTES` is `20`.
 - `FEED_RETENTION_DAYS` is `14`.
-- `APITUBE_MAX_PAGES` is `100`. One pull fails when APITube returns more pages than this.
+- `APITUBE_MAX_PAGES` is `400`. One pull fails when APITube returns more pages than this.
 
 After the Worker exists, set these secrets in the Cloudflare dashboard. They are not GitHub secrets.
 
@@ -168,7 +168,7 @@ The job is `deploy-ingestion` in `.github/workflows/deploy-staging.yml`. A push 
 
 The Worker name is `nearcrawl-ingestion`. The first deploy creates it. Reuse the GitHub secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`. Do not create a Cloudflare account.
 
-The pull cron is `*/20 * * * *`. The purge cron is off until you add `0 0 * * *` back to `crons`.
+The pull cron is off until you add `*/20 * * * *` back to `crons`. The purge cron is off until you add `0 0 * * *` back to `crons`.
 
 Check after the first successful pull:
 
