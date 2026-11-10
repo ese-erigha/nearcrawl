@@ -21,16 +21,16 @@ compatibility_date = "2026-10-26"
 compatibility_flags = ["nodejs_compat"]
 
 [vars]
-INGESTION_INTERVAL_MINUTES = "17"
+INGESTION_INTERVAL_MINUTES = "20"
 FEED_RETENTION_DAYS = "14"
 APITUBE_MAX_PAGES = "100"
 SENTRY_ENVIRONMENT = "production"
 
-# */17 * * * * would pull news every 17 minutes. That cron is off.
+# */20 * * * * pulls news every 20 minutes.
 # An empty crons list removes the schedule. A comment alone leaves the old schedule in place.
 # 0 0 * * * would delete articles older than FEED_RETENTION_DAYS at 00:00 UTC. That cron is off.
 [triggers]
-crons = []
+crons = ["*/20 * * * *"]
 
 [observability]
 enabled = true

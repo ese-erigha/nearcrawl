@@ -112,5 +112,5 @@ The read is a normal `GET`. Pass the time cutoff as a parameter. Leave `now()` o
 ## Out of this change
 
 - No daily full walk and no change to the known-page stop.
-- The pull cron stays off until `*/17 * * * *` is put back in `crons`.
+- The pull cron is `*/20 * * * *`. This change does not edit it.
 - No LightGBM re-rank. That work stays in Phase 3.

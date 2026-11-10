@@ -71,7 +71,7 @@ To build a high-performance, cost-optimized spatial intelligence platform across
 PHASE 1: MVP (Serverless Spatial News Foundation)
 ├── apps/web — React + Globe.gl 3D canvas on Cloudflare Pages (PWA). Future work.
 ├── apps/gateway — auth, bounding-box news query, and article reads
-├── apps/ingestion — Cloudflare Cron fetches APITube news every 17 minutes and purges the 14-day feed
+├── apps/ingestion — Cloudflare Cron fetches APITube news every 20 minutes and purges the 14-day feed
 ├── Neon PostgreSQL + PostGIS operating a rolling 14-day news window with a spatial index
 └── Local-First IndexedDB implementation for persistent user bookmarks and history. Future work.
                          │

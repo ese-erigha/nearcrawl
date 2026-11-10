@@ -179,7 +179,7 @@ Add `GET /` on the articles router, and register it before `GET /:id`. The path 
 
 ## Out of this change
 
-- The pull cron stays empty until `*/17 * * * *` is put back in `crons`.
+- The pull cron is `*/20 * * * *`. This change does not edit it.
 - No daily full walk and no change to the known-page stop.
 - No LightGBM re-rank.
 - No tone marker and no tracked-entity store.

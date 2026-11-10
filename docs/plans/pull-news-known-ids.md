@@ -2,7 +2,7 @@
 
 A later pull starts at page 1 and stops when every `apitube_id` on the page is already in `articles`. The pull still writes that page. It does not request the next page.
 
-This change adds no column and no index. The pull cron stays off.
+This change adds no column and no index. It does not edit the pull cron.
 
 ## What APITube confirms
 
@@ -54,6 +54,6 @@ The page write stays one batch. Known ids on a fetched page are still updated. T
 
 ## Out of this change
 
-- The pull cron stays an empty `crons` list.
+- The pull cron is `*/20 * * * *`. This change does not edit it.
 - No daily full walk. That walk is the current loop, run on its own schedule, for late-indexed articles and edits past the known page.
 - No change to `published_at.start`.

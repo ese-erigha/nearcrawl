@@ -2,7 +2,7 @@
 
 This file lists the user stories in the PRD and in the phase plans. A story is **implemented** when the route or the browser store exists in the repo. The page does not call those routes yet. `apps/web` draws a colored box and a bookmarks note. No story is complete for a visitor.
 
-The ingestion pull cron and the purge cron are off in `apps/ingestion/wrangler.toml`. The pull code and the purge code exist. A schedule does not run them.
+The ingestion pull cron is `*/20 * * * *` in `apps/ingestion/wrangler.toml`. The purge code exists. The purge cron is off.
 
 ## Home page
 
@@ -113,7 +113,7 @@ These items are named in the PRD or in a plan, and no current story above owns t
 - `storyId` on the article JSON, so the divergence view can open from a pin.
 - `source_rank` as a tie break on the hot list. The column is stored. The hot list does not use it.
 - A daily full walk of APITube for articles that arrive after the known page.
-- Turn the pull cron and the purge cron on. The code is in the ingestion Worker. The schedule is empty.
+- Turn the purge cron on. The pull cron is `*/20 * * * *`. The purge code is in the ingestion Worker.
 - A historical read beyond the 14-day feed, taken from APITube on demand. The PRD describes it. No route calls it.
 - `sentiment.overall` and `source.bias` on a later screen. The article fields plan holds them for the divergence view and a later rank.
 - Entity character positions. Phase 3 stores a name match only. Positions wait for a screen that highlights a span.

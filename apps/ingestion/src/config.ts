@@ -2,7 +2,7 @@ import { AsyncLocalStorage } from 'node:async_hooks'
 import { readFileSync } from 'node:fs'
 import { z } from 'zod'
 
-export const PULL_CRON = '*/17 * * * *'
+export const PULL_CRON = '*/20 * * * *'
 export const PURGE_CRON = '0 0 * * *'
 export const DAY_MS = 86_400_000
 

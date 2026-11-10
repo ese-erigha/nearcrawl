@@ -15,12 +15,12 @@ describe('ingestion config', () => {
     assert.equal(limits.maxPages > 0, true)
   })
 
-  it('when wrangler loads, then the pull cron and the purge cron are off', () => {
+  it('when wrangler loads, then the pull cron matches the interval and the purge cron stays off', () => {
     const toml = readFileSync(new URL('../wrangler.toml', import.meta.url), 'utf8')
     const crons = toml.match(/crons\s*=\s*\[([^\]]*)\]/)?.[1] ?? ''
     const limits = readScheduleLimits()
     assert.equal(PULL_CRON, `*/${limits.intervalMinutes} * * * *`)
-    assert.equal(crons.trim(), '')
+    assert.equal(crons.includes(`"${PULL_CRON}"`), true)
     assert.equal(PURGE_CRON, '0 0 * * *')
     assert.equal(crons.includes(`"${PURGE_CRON}"`), false)
   })
