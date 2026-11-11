@@ -26,6 +26,7 @@ export {
   menuCategoriesSql,
   type InsertCategory,
 } from './categories.sql.ts'
+export { countryCodeAt, countryPolygonWkt } from './country-border.ts'
 export {
   DbArticleRepository,
   type ArticleRow,

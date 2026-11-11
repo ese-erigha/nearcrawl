@@ -11,6 +11,7 @@ import {
   type UpsertArticle,
 } from './articles.sql.ts'
 import { createDbClient, type DbClient } from './client.ts'
+import { countryPolygonWkt } from './country-border.ts'
 
 export type BBox = {
   west: number
@@ -111,9 +112,11 @@ export class DbArticleRepository {
   }
 
   async listHotByCountry(query: HotNewsQuery): Promise<ArticleRow[]> {
+    const countryPolygon = countryPolygonWkt(query.countryCode)
+    if (!countryPolygon) return []
     return this.read(
       hotNewsSql({
-        countryCode: query.countryCode,
+        countryPolygon,
         publishedAfter: query.publishedAfter,
         limit: query.limit,
       }),

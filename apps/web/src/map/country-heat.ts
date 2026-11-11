@@ -1,5 +1,5 @@
 import type { Article } from '../articles/article.ts'
-import rawBorders from './country-borders.json' with { type: 'json' }
+import rawBorders from '../../../../packages/db/src/country-borders.json' with { type: 'json' }
 import { project } from './globe-math.ts'
 
 // Natural Earth 110m admin-0 countries. Public domain.

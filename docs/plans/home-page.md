@@ -41,7 +41,7 @@ The design notes in that repo say the globe carries the drama and the panels sta
 ## What the visitor gets
 
 1. The page reads the device location.
-2. `GET /api/articles?country=` loads the hot list for that country. Breaking stories come first, then stories with more shares, then newer stories. `windowHours=48` is the brief window. The default window is the 14-day feed.
+2. `GET /api/articles?country=` loads the hot list for that country. A story stays when its pin is inside the country border. Breaking stories come first, then stories with more shares, then newer stories. `windowHours=48` is the brief window. The default window is the 14-day feed.
 3. The globe opens on that country and revolves. A drag pauses it. The spin starts again 4 seconds after the drag ends, from that same place. The first pins come from `GET /api/spatial/news` for the whole world. A drag loads the box in view from the same route.
 4. The left list is that hot list. Every visitor in the country sees the same list and the same order. A drag does not replace this list. After sign-up, this list follows the home countries, the topics, and the tracked names.
 5. The search field filters the loaded hot list. It does not call the inference search.

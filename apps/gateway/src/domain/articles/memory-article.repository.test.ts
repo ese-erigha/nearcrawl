@@ -127,8 +127,8 @@ describe('MemoryArticleRepository', () => {
     const repository = new MemoryArticleRepository([
       row({
         id: 'duplicate',
-        latitude: 1,
-        longitude: 2,
+        latitude: 48.86,
+        longitude: 2.35,
         is_duplicate: true,
         is_breaking: true,
         share_count: 100,
@@ -136,27 +136,27 @@ describe('MemoryArticleRepository', () => {
       }),
       row({
         id: 'shares',
-        latitude: 1,
-        longitude: 2,
+        latitude: 48.86,
+        longitude: 2.35,
         is_breaking: false,
         share_count: 50,
-        country_codes: ['FR'],
+        country_codes: ['US'],
       }),
       row({
         id: 'breaking',
-        latitude: 1,
-        longitude: 2,
+        latitude: 48.86,
+        longitude: 2.35,
         is_breaking: true,
         share_count: 1,
-        country_codes: ['FR'],
+        country_codes: ['ES'],
       }),
       row({
         id: 'united-states',
-        latitude: 1,
-        longitude: 2,
+        latitude: 40.71,
+        longitude: -74.01,
         is_breaking: true,
         share_count: 99,
-        country_codes: ['US'],
+        country_codes: ['FR'],
       }),
     ])
 

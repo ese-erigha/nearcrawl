@@ -96,7 +96,7 @@ export function articleByIdSql(id: string): SQL {
 }
 
 export type HotNewsStatement = {
-  countryCode: string
+  countryPolygon: string
   publishedAfter: Date
   limit: number
 }
@@ -105,10 +105,12 @@ export function hotNewsSql(input: HotNewsStatement): SQL {
   return sql`
     SELECT ${articleColumnsSql}
     FROM articles
-    JOIN article_countries ON article_countries.article_id = articles.id
-    WHERE article_countries.country_code = ${input.countryCode}
+    WHERE articles.is_duplicate = false
       AND articles.published_at >= ${input.publishedAfter}::timestamptz
-      AND articles.is_duplicate = false
+      AND ST_Covers(
+        ST_GeogFromText(${input.countryPolygon}),
+        articles.location
+      )
     ORDER BY articles.is_breaking DESC, articles.share_count DESC, articles.published_at DESC
     LIMIT ${input.limit}
   `

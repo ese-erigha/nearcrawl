@@ -12,10 +12,10 @@
     }
   },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "tsc -p tsconfig.build.json && cp src/country-borders.json dist/country-borders.json",
     "lint": "oxlint",
     "typecheck": "tsc -p tsconfig.json --noEmit --pretty false",
-    "test": "node --test ../../scripts/check-direct-database-url.test.mjs src/categories.catalog.test.ts src/categories.write.test.ts src/articles.write.test.ts"
+    "test": "node --test ../../scripts/check-direct-database-url.test.mjs src/categories.catalog.test.ts src/categories.write.test.ts src/articles.write.test.ts src/country-border.test.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",

@@ -22,6 +22,6 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src"],
+  "include": ["src", "../../packages/db/src/country-border.ts", "../../packages/db/src/country-borders.json"],
   "exclude": ["src/**/*.test.ts"]
 }

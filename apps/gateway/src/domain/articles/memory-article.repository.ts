@@ -1,4 +1,4 @@
-import { CATEGORY } from 'db'
+import { CATEGORY, countryCodeAt } from 'db'
 
 import type { ArticleRepository, ArticleRow, BreakingNewsQuery, HotNewsQuery, MentionNewsQuery, SpatialNewsQuery } from './articles.types.ts'
 
@@ -90,7 +90,7 @@ function mentionMatch(row: ArticleRow, query: MentionNewsQuery): boolean {
 function hotMatch(row: ArticleRow, query: HotNewsQuery): boolean {
   return (
     !row.is_duplicate &&
-    row.country_codes.includes(query.countryCode) &&
+    countryCodeAt(row.latitude, row.longitude) === query.countryCode &&
     row.published_at.getTime() >= query.publishedAfter.getTime()
   )
 }
