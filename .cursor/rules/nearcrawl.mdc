@@ -100,7 +100,7 @@ const rows = await findInBBox(bbox)
 ## Repo policy
 
 - **Do not commit or push** unless the user asks in that message.
-- **Do not deploy.** The user deploys. A push to `develop` deploys the gateway Worker and the ingestion Worker from `.github/workflows/deploy-staging.yml` when the GitHub Cloudflare secrets are set. A push that changes the inference service deploys it from `.github/workflows/deploy-inference.yml`. Forbidden unless they ask: `wrangler deploy`, a Render deploy, `git push` to trigger a workflow, `neon deploy`.
+- **Do not deploy.** The user deploys. A push to `develop` deploys the gateway Worker and the ingestion Worker from `.github/workflows/deploy-staging.yml` when the GitHub Cloudflare secrets are set. A push that changes `apps/web` or `.github/workflows/deploy-web-staging.yml` deploys the Pages site `nearcrawl-web` from that workflow. A push that changes the inference service deploys it from `.github/workflows/deploy-inference.yml`. Forbidden unless they ask: `wrangler deploy`, `wrangler pages deploy`, a Render deploy, `git push` to trigger a workflow, `neon deploy`.
 - **Do not mutate remote Neon or Sentry.** Forbidden unless they ask: `drizzle-kit migrate`, SQL against the remote database, Sentry project or token changes, writes that use secrets from `.env.var`.
 - Remote read-only checks are fine when the answer needs them. Prefer the code and the docs first.
 - OK without asking: `pnpm dev`, `pnpm build`, `pnpm test`, `pnpm typecheck`, `pnpm lint`.

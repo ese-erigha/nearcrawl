@@ -1,0 +1,14 @@
+# NearCrawl website on Cloudflare Pages.
+# Local `pnpm --filter web dev` stays on Vite. It does not use this file.
+# `pnpm exec wrangler pages deploy` reads this file from apps/web.
+# The Vite build writes dist. Pages Functions live in functions/.
+# The GATEWAY binding name must match the dashboard service binding.
+
+name = "nearcrawl-web"
+pages_build_output_dir = "dist"
+compatibility_date = "2026-10-26"
+compatibility_flags = ["nodejs_compat"]
+
+[[services]]
+binding = "GATEWAY"
+service = "nearcrawl-gateway"

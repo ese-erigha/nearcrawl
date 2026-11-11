@@ -118,7 +118,7 @@ The secret's host must not contain `-pooler`. `drizzle-kit migrate` opens a dire
 
 ## Downstream jobs
 
-The gateway job is `deploy-gateway` in `.github/workflows/deploy-staging.yml`. The ingestion job is `deploy-ingestion`. The steps are in [cloudflare-workers-deploy.md](cloudflare-workers-deploy.md). The web app does not deploy yet.
+The gateway job is `deploy-gateway` in `.github/workflows/deploy-staging.yml`. The ingestion job is `deploy-ingestion`. The steps are in [cloudflare-workers-deploy.md](cloudflare-workers-deploy.md). The web app deploys from `.github/workflows/deploy-web-staging.yml`. The steps are in [cloudflare-pages-deploy.md](cloudflare-pages-deploy.md).
 
 `deploy-gateway` runs when tests passed, and when migrate succeeded or was skipped:
 

@@ -4,7 +4,7 @@ GitHub Actions deploys the gateway and the ingestion Worker. You do not run `wra
 
 The Worker name is `nearcrawl-gateway`. The first successful deploy creates it. Do not create a new Cloudflare account. Use the account that already deploys Closetza.
 
-The web app is not in this job. The ingestion job is `deploy-ingestion`. Its Worker settings are in [ingestion.md](ingestion.md).
+The web app is not in this job. The Pages deploy is in [cloudflare-pages-deploy.md](cloudflare-pages-deploy.md). The ingestion job is `deploy-ingestion`. Its Worker settings are in [ingestion.md](ingestion.md).
 
 ## GitHub secrets
 

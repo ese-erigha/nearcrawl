@@ -1,0 +1,47 @@
+name: Deploy Website
+
+on:
+  push:
+    branches:
+      - develop
+    paths:
+      - "apps/web/**"
+      - ".github/workflows/deploy-web-staging.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  deployments: write
+
+jobs:
+  deploy-web:
+    runs-on: ubuntu-latest
+    name: Deploy website
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm turbo run lint typecheck test build --filter=web
+
+      - name: Ensure the Pages project exists
+        working-directory: apps/web
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if pnpm exec wrangler pages project list | grep -F nearcrawl-web; then
+            echo "Pages project nearcrawl-web already exists."
+          else
+            pnpm exec wrangler pages project create nearcrawl-web --production-branch develop
+          fi
+
+      - name: Deploy to Cloudflare Pages
+        working-directory: apps/web
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: pnpm exec wrangler pages deploy --branch develop
