@@ -1,4 +1,3 @@
-import { logger } from '@sentry/hono/cloudflare'
 import { z } from 'zod'
 
 import { postInferenceJson } from '../../lib/inference-json.ts'
@@ -22,9 +21,9 @@ export async function getDailyBrief(country: string): Promise<{ articles: Articl
 
 async function summarizeStories(articles: Article[]): Promise<string> {
   const payload = { stories: articles.map(storyForModel) }
-  logger.info('brief payload', { payload: JSON.stringify(payload) })
+  console.log('brief payload', JSON.stringify(payload))
   const body = await postInferenceJson('/brief-summaries', payload)
-  logger.info('brief body', { body: JSON.stringify(body) })
+  console.log('brief body', JSON.stringify(body))
   const parsed = summarySchema.safeParse(body)
   if (!parsed.success) return ''
   return parsed.data.summary.trim()

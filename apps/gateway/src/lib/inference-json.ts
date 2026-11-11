@@ -1,10 +1,8 @@
-import { logger } from '@sentry/hono/cloudflare'
-
 import { getConfig, getRequestId } from './context.ts'
 
 export async function postInferenceJson(path: string, payload: unknown): Promise<unknown | null> {
   const config = getConfig()
-  logger.info('inference', { inferenceUrl: config.inferenceUrl })
+  console.log('inference url', config.inferenceUrl)
   if (config.inferenceUrl === '') return null
   const requestId = getRequestId() ?? crypto.randomUUID()
   try {
