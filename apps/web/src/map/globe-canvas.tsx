@@ -17,6 +17,7 @@ import {
   focusView,
   frameGlobe,
   homeView,
+  pointerInsideGlobe,
   placeBanners,
   project,
   shortestTurn,
@@ -90,6 +91,8 @@ export function GlobeCanvas({ stories, insetLeft, insetRight, insetBottom, selec
   const selectedRef = useRef(selectedId)
   const pointerRef = useRef({ x: 0, y: 0, moved: false })
   const draggingRef = useRef(false)
+  const overGlobeRef = useRef(false)
+  const globeFrameRef = useRef({ x: 0, y: 0, radius: 0 })
   const lastXRef = useRef(0)
   const resumeAtRef = useRef(0)
   const pinsRef = useRef<{ id: string; x: number; y: number }[]>([])
@@ -202,7 +205,8 @@ export function GlobeCanvas({ stories, insetLeft, insetRight, insetBottom, selec
       }
       const flight = flightRef.current
       const focused = goalRef.current.id !== null
-      const spinning = !reduced && !draggingRef.current && !focused && !flight && now >= resumeAtRef.current
+      const spinning =
+        overGlobeRef.current && !reduced && !draggingRef.current && !focused && !flight && now >= resumeAtRef.current
       if (flight) {
         const t = flight.duration === 0 ? 1 : easeOutCubic((now - flight.started) / flight.duration)
         viewRef.current = {
@@ -219,6 +223,7 @@ export function GlobeCanvas({ stories, insetLeft, insetRight, insetBottom, selec
       const centerX = framed.centerX
       const centerY = framed.centerY
       const radius = framed.radius
+      globeFrameRef.current = { x: centerX, y: centerY, radius }
       const rotation = viewRef.current.rotation
       const time = (now - startedRef.current) / 1000
       context.clearRect(0, 0, cssWidth, cssHeight)
@@ -317,9 +322,11 @@ export function GlobeCanvas({ stories, insetLeft, insetRight, insetBottom, selec
       <canvas ref={skyRef} className="pointer-events-none absolute inset-0 h-full w-full" />
       <canvas
         ref={markRef}
-        className="absolute inset-0 h-full w-full cursor-grab touch-none active:cursor-grabbing"
+        className="absolute inset-0 h-full w-full touch-none"
         aria-label="Revolving globe"
         onPointerDown={(event) => {
+          const point = pointerPoint(event.currentTarget, event.clientX, event.clientY)
+          if (!insideGlobe(point, globeFrameRef.current)) return
           draggingRef.current = true
           pointerRef.current = { x: event.clientX, y: event.clientY, moved: false }
           lastXRef.current = event.clientX
@@ -328,13 +335,13 @@ export function GlobeCanvas({ stories, insetLeft, insetRight, insetBottom, selec
           event.currentTarget.setPointerCapture(event.pointerId)
         }}
         onPointerMove={(event) => {
-          const rect = event.currentTarget.getBoundingClientRect()
-          const x = event.clientX - rect.left
-          const y = event.clientY - rect.top
-          mouseRef.current = { x, y }
-          const onPin = pinsRef.current.some((pin) => Math.hypot(pin.x - x, pin.y - y) <= PIN_REACH)
-          event.currentTarget.style.cursor = draggingRef.current ? 'grabbing' : onPin ? 'pointer' : 'grab'
-          if (!draggingRef.current) return
+          const point = pointerPoint(event.currentTarget, event.clientX, event.clientY)
+          const onGlobe = insideGlobe(point, globeFrameRef.current)
+          overGlobeRef.current = onGlobe
+          mouseRef.current = onGlobe ? point : { x: -10_000, y: -10_000 }
+          const onPin = onGlobe && pinsRef.current.some((pin) => Math.hypot(pin.x - point.x, pin.y - point.y) <= PIN_REACH)
+          event.currentTarget.style.cursor = draggingRef.current ? 'grabbing' : onPin ? 'pointer' : onGlobe ? 'grab' : 'default'
+          if (!draggingRef.current || !onGlobe) return
           if (Math.hypot(event.clientX - pointerRef.current.x, event.clientY - pointerRef.current.y) > 6) {
             pointerRef.current.moved = true
             flightRef.current = null
@@ -343,11 +350,17 @@ export function GlobeCanvas({ stories, insetLeft, insetRight, insetBottom, selec
           lastXRef.current = event.clientX
           viewRef.current.rotation -= delta * 0.35
         }}
+        onPointerLeave={() => {
+          overGlobeRef.current = false
+          mouseRef.current = { x: -10_000, y: -10_000 }
+        }}
         onPointerUp={(event) => {
+          if (!draggingRef.current) return
           const moved = pointerRef.current.moved
           draggingRef.current = false
           resumeAtRef.current = performance.now() + GLOBE_RESUME_MS
-          event.currentTarget.style.cursor = 'grab'
+          const point = pointerPoint(event.currentTarget, event.clientX, event.clientY)
+          event.currentTarget.style.cursor = insideGlobe(point, globeFrameRef.current) ? 'grab' : 'default'
           if (event.currentTarget.hasPointerCapture(event.pointerId)) {
             event.currentTarget.releasePointerCapture(event.pointerId)
           }
@@ -355,10 +368,7 @@ export function GlobeCanvas({ stories, insetLeft, insetRight, insetBottom, selec
             onSettleRef.current(facingBBox(viewRef.current))
             return
           }
-          const rect = event.currentTarget.getBoundingClientRect()
-          const x = event.clientX - rect.left
-          const y = event.clientY - rect.top
-          const hit = pinsRef.current.find((pin) => Math.hypot(pin.x - x, pin.y - y) <= PIN_REACH)
+          const hit = pinsRef.current.find((pin) => Math.hypot(pin.x - point.x, pin.y - point.y) <= PIN_REACH)
           onSelectRef.current(hit?.id ?? null)
         }}
       />
@@ -366,4 +376,13 @@ export function GlobeCanvas({ stories, insetLeft, insetRight, insetBottom, selec
       <PinBanners stories={stories} placed={banners} onSelect={onSelect} />
     </div>
   )
+}
+
+function pointerPoint(canvas: HTMLCanvasElement, clientX: number, clientY: number) {
+  const rect = canvas.getBoundingClientRect()
+  return { x: clientX - rect.left, y: clientY - rect.top }
+}
+
+function insideGlobe(point: { x: number; y: number }, frame: { x: number; y: number; radius: number }) {
+  return pointerInsideGlobe(point.x, point.y, frame.x, frame.y, frame.radius)
 }

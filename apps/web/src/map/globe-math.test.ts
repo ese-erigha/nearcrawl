@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 
-import { facingBBox, focusView, frameGlobe, homeView, placeBanners, project } from './globe-math.ts'
+import { facingBBox, focusView, frameGlobe, homeView, placeBanners, pointerInsideGlobe, project } from './globe-math.ts'
 
 describe('facingBBox', () => {
   it('when the globe faces the prime meridian, then the box is centered on that meridian', () => {
@@ -10,6 +10,16 @@ describe('facingBBox', () => {
     assert.equal(box.east, 90)
     assert.equal(box.south, -50)
     assert.equal(box.north, 50)
+  })
+})
+
+describe('pointerInsideGlobe', () => {
+  it('when the pointer is inside the disc, then the globe can turn', () => {
+    assert.equal(pointerInsideGlobe(200, 200, 200, 200, 100), true)
+  })
+
+  it('when the pointer is outside the disc, then the globe stays still', () => {
+    assert.equal(pointerInsideGlobe(20, 200, 200, 200, 100), false)
   })
 })
 

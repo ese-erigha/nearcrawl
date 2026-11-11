@@ -101,6 +101,10 @@ export function homeView(current: GlobeView): GlobeView {
   return { rotation: current.rotation, latitude: 0, radiusScale: 1 }
 }
 
+export function pointerInsideGlobe(x: number, y: number, centerX: number, centerY: number, radius: number): boolean {
+  return Math.hypot(x - centerX, y - centerY) <= radius
+}
+
 export function frameGlobe(
   view: GlobeView,
   width: number,
