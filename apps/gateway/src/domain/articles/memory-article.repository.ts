@@ -1,4 +1,4 @@
-import { CATEGORY, countryCodeAt } from 'db'
+import { CATEGORY } from 'db'
 
 import type { ArticleRepository, ArticleRow, BreakingNewsQuery, HotNewsQuery, MentionNewsQuery, SpatialNewsQuery } from './articles.types.ts'
 
@@ -62,8 +62,11 @@ export class MemoryArticleRepository implements ArticleRepository {
   }
 
   listHotByCountry(query: HotNewsQuery): Promise<ArticleRow[]> {
-    const matches = this.rows.filter((row) => hotMatch(row, query)).sort(hotFirst)
-    return Promise.resolve(matches.slice(0, query.limit))
+    const pages = query.countryCodes.flatMap((countryCode) => {
+      const matches = this.rows.filter((row) => hotMatch(row, query, countryCode)).sort(hotFirst)
+      return matches.slice(0, query.limit)
+    })
+    return Promise.resolve(pages)
   }
 
   listBreaking(query: BreakingNewsQuery): Promise<ArticleRow[]> {
@@ -87,10 +90,10 @@ function mentionMatch(row: ArticleRow, query: MentionNewsQuery): boolean {
   return haystack.includes(query.text.trim().toLowerCase())
 }
 
-function hotMatch(row: ArticleRow, query: HotNewsQuery): boolean {
+function hotMatch(row: ArticleRow, query: HotNewsQuery, countryCode: string): boolean {
   return (
     !row.is_duplicate &&
-    countryCodeAt(row.latitude, row.longitude) === query.countryCode &&
+    row.country_codes.includes(countryCode) &&
     row.published_at.getTime() >= query.publishedAfter.getTime()
   )
 }

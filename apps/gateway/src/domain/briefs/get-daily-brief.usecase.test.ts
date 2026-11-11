@@ -10,7 +10,7 @@ const article = {
   body: 'The full scraped page stays off the model request.',
 } as Article
 
-const sent: { path?: string; payload?: unknown; country?: string; windowHours?: number } = {}
+const sent: { path?: string; payload?: unknown; countries?: string[]; windowHours?: number } = {}
 
 mock.module('../../lib/context.ts', {
   namedExports: {
@@ -20,8 +20,8 @@ mock.module('../../lib/context.ts', {
 
 mock.module('../articles/usecases/list-hot-news.usecase.ts', {
   namedExports: {
-    listHotNews: async (country: string, windowHours?: number) => {
-      sent.country = country
+    listHotNews: async (countries: string[], windowHours?: number) => {
+      sent.countries = countries
       sent.windowHours = windowHours
       return { articles: [article] }
     },
@@ -46,7 +46,7 @@ describe('getDailyBrief', () => {
     const payload = sent.payload as { stories: { title: string; sourceName: string; description: string }[] }
     const story = payload.stories[0]
 
-    assert.equal(sent.country, 'ca')
+    assert.deepEqual(sent.countries, ['ca'])
     assert.equal(sent.windowHours, 48)
     assert.equal(sent.path, '/brief-summaries')
     assert.equal(story?.title, 'Port closure')

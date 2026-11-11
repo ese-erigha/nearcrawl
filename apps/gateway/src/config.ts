@@ -13,6 +13,7 @@ export interface GatewayBindings {
   CATEGORY_ARTICLES_CAP?: string
   FEED_RETENTION_DAYS?: string
   HOT_NEWS_CAP?: string
+  HOT_COUNTRY_CAP?: string
   BRIEF_WINDOW_HOURS?: string
   INFERENCE_URL?: string
   INFERENCE_SECRET?: string
@@ -29,6 +30,7 @@ export interface AppConfig {
   categoryArticlesCap: number
   feedRetentionDays: number
   hotNewsCap: number
+  hotCountryCap: number
   briefWindowHours: number
   inferenceUrl: string
   inferenceSecret: string
@@ -51,6 +53,7 @@ export function readBindings(raw: unknown): GatewayBindings {
     CATEGORY_ARTICLES_CAP: textValue(env.CATEGORY_ARTICLES_CAP),
     FEED_RETENTION_DAYS: textValue(env.FEED_RETENTION_DAYS),
     HOT_NEWS_CAP: textValue(env.HOT_NEWS_CAP),
+    HOT_COUNTRY_CAP: textValue(env.HOT_COUNTRY_CAP),
     BRIEF_WINDOW_HOURS: textValue(env.BRIEF_WINDOW_HOURS),
     INFERENCE_URL: textValue(env.INFERENCE_URL),
     INFERENCE_SECRET: textValue(env.INFERENCE_SECRET),
@@ -81,6 +84,7 @@ const gatewayConfigSchema = z
     CATEGORY_ARTICLES_CAP: positiveInt('CATEGORY_ARTICLES_CAP'),
     FEED_RETENTION_DAYS: positiveInt('FEED_RETENTION_DAYS'),
     HOT_NEWS_CAP: positiveInt('HOT_NEWS_CAP'),
+    HOT_COUNTRY_CAP: positiveInt('HOT_COUNTRY_CAP'),
     BRIEF_WINDOW_HOURS: positiveInt('BRIEF_WINDOW_HOURS'),
     INFERENCE_URL: z
       .string()
@@ -110,6 +114,7 @@ export function createConfig(raw: unknown): AppConfig {
     categoryArticlesCap: data.CATEGORY_ARTICLES_CAP,
     feedRetentionDays: data.FEED_RETENTION_DAYS,
     hotNewsCap: data.HOT_NEWS_CAP,
+    hotCountryCap: data.HOT_COUNTRY_CAP,
     briefWindowHours: data.BRIEF_WINDOW_HOURS,
     inferenceUrl: data.INFERENCE_URL,
     inferenceSecret: data.INFERENCE_SECRET,
@@ -141,6 +146,7 @@ function businessVars(env: GatewayBindings): GatewayBindings {
     env.CATEGORY_ARTICLES_CAP &&
     env.FEED_RETENTION_DAYS &&
     env.HOT_NEWS_CAP &&
+    env.HOT_COUNTRY_CAP &&
     env.BRIEF_WINDOW_HOURS &&
     env.SENTRY_ENVIRONMENT
   ) {
@@ -154,6 +160,7 @@ function businessVars(env: GatewayBindings): GatewayBindings {
     CATEGORY_ARTICLES_CAP: env.CATEGORY_ARTICLES_CAP ?? vars.CATEGORY_ARTICLES_CAP,
     FEED_RETENTION_DAYS: env.FEED_RETENTION_DAYS ?? vars.FEED_RETENTION_DAYS,
     HOT_NEWS_CAP: env.HOT_NEWS_CAP ?? vars.HOT_NEWS_CAP,
+    HOT_COUNTRY_CAP: env.HOT_COUNTRY_CAP ?? vars.HOT_COUNTRY_CAP,
     BRIEF_WINDOW_HOURS: env.BRIEF_WINDOW_HOURS ?? vars.BRIEF_WINDOW_HOURS,
     SENTRY_ENVIRONMENT: env.SENTRY_ENVIRONMENT ?? vars.SENTRY_ENVIRONMENT,
   }

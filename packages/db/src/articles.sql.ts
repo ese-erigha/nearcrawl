@@ -96,23 +96,35 @@ export function articleByIdSql(id: string): SQL {
 }
 
 export type HotNewsStatement = {
-  countryPolygon: string
+  countryCodes: readonly string[]
   publishedAfter: Date
   limit: number
 }
 
 export function hotNewsSql(input: HotNewsStatement): SQL {
+  const countries = sql.join(
+    input.countryCodes.map((code) => sql`${code}`),
+    sql`, `,
+  )
   return sql`
     SELECT ${articleColumnsSql}
     FROM articles
-    WHERE articles.is_duplicate = false
-      AND articles.published_at >= ${input.publishedAfter}::timestamptz
-      AND ST_Covers(
-        ST_GeogFromText(${input.countryPolygon}),
-        articles.location
-      )
-    ORDER BY articles.is_breaking DESC, articles.share_count DESC, articles.published_at DESC
-    LIMIT ${input.limit}
+    JOIN (
+      SELECT ranked.article_id
+      FROM (
+        SELECT article_countries.article_id,
+          ROW_NUMBER() OVER (
+            PARTITION BY article_countries.country_code
+            ORDER BY articles.is_breaking DESC, articles.share_count DESC, articles.published_at DESC
+          ) AS country_rank
+        FROM article_countries
+        JOIN articles ON articles.id = article_countries.article_id
+        WHERE articles.is_duplicate = false
+          AND articles.published_at >= ${input.publishedAfter}::timestamptz
+          AND article_countries.country_code IN (${countries})
+      ) ranked
+      WHERE ranked.country_rank <= ${input.limit}
+    ) picked ON picked.article_id = articles.id
   `
 }
 

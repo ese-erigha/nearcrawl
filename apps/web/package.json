@@ -9,7 +9,7 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "typecheck": "tsc -b --pretty false",
-    "test": "node --test src/services/bookmarks.test.ts src/services/history.test.ts src/map/globe-math.test.ts src/map/country-heat.test.ts src/map/visitor-place.test.ts src/map/hot-window.test.ts src/brief/brief-model.test.ts src/brief/brief-map.test.ts"
+    "test": "node --test src/services/bookmarks.test.ts src/services/history.test.ts src/map/globe-math.test.ts src/map/country-heat.test.ts src/map/country-frame.test.ts src/map/visitor-place.test.ts src/map/hot-window.test.ts src/brief/brief-model.test.ts src/brief/brief-map.test.ts"
   },
   "dependencies": {
     "@fontsource-variable/hubot-sans": "^5.3.0",

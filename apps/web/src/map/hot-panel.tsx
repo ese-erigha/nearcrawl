@@ -5,7 +5,9 @@ import { Link } from 'react-router-dom'
 import type { Article } from '../articles/article.ts'
 import { CATEGORY, type Category } from '../articles/topics.ts'
 import { PATH } from '../shell/navigation.constants.ts'
+import type { CountryChoice } from './country-choices.ts'
 import { HotCategoryChips } from './hot-category-chips.tsx'
+import { HotCountryControl } from './hot-country-control.tsx'
 import { HotMetricCard } from './hot-metric-card.tsx'
 import { HotStoryRow } from './hot-story-row.tsx'
 import { HotTimeSwitch } from './hot-time-switch.tsx'
@@ -37,6 +39,9 @@ type HotPanelProps = {
   onClose: () => void
   selectedId: string | null
   onSelect: (id: string) => void
+  countries: CountryChoice[]
+  onAddCountry: (code: string) => void
+  onRemoveCountry: (code: string) => void
 }
 
 function matchesFilter(story: Article, filter: ListFilter): boolean {
@@ -45,7 +50,18 @@ function matchesFilter(story: Article, filter: ListFilter): boolean {
   return true
 }
 
-export function HotPanel({ title, subtitle, stories, status, onClose, selectedId, onSelect }: HotPanelProps) {
+export function HotPanel({
+  title,
+  subtitle,
+  stories,
+  status,
+  onClose,
+  selectedId,
+  onSelect,
+  countries,
+  onAddCountry,
+  onRemoveCountry,
+}: HotPanelProps) {
   const [category, setCategory] = useState<Category>(CATEGORY.ALL)
   const [feedWindow, setFeedWindow] = useState<FeedWindow>(FEED_WINDOW.FEED)
   const [filter, setFilter] = useState<ListFilter>(LIST_FILTER.ALL)
@@ -69,10 +85,7 @@ export function HotPanel({ title, subtitle, stories, status, onClose, selectedId
       className="absolute top-4 bottom-4 left-4 z-10 flex max-w-[calc(100%-2rem)] flex-col overflow-auto rounded-[22px] bg-surface p-4 shadow-[inset_0_0_0_1px_var(--color-hairline),0_12px_32px_rgb(0_0_0/0.35)]"
     >
       <div className="flex items-start justify-between gap-3">
-        <div>
-          <h1 className="font-condensed text-[32px] leading-[0.95] font-bold tracking-[-0.02em] text-ink">{title}</h1>
-          <p className="mt-3 text-[14px] leading-snug text-ink-3">{subtitle}</p>
-        </div>
+        <h1 className="font-condensed text-[32px] leading-[0.95] font-bold tracking-[-0.02em] text-ink">{title}</h1>
         <button
           type="button"
           aria-label="Close the country list"
@@ -82,6 +95,8 @@ export function HotPanel({ title, subtitle, stories, status, onClose, selectedId
           <X size={14} />
         </button>
       </div>
+      <HotCountryControl countries={countries} onAdd={onAddCountry} onRemove={onRemoveCountry} />
+      <p className="mt-3 text-[14px] leading-snug text-ink-3">{subtitle}</p>
       <div className="mt-4 flex items-center justify-between gap-3">
         <p className="text-[13px] text-ink-2">
           <span className="mr-2 inline-block size-1.5 rounded-full bg-live" />
@@ -103,7 +118,12 @@ export function HotPanel({ title, subtitle, stories, status, onClose, selectedId
       <p className="mt-3 text-[12px] leading-relaxed text-ink-4">
         {status === 'loading' ? 'Loading stories.' : null}
         {status === 'error' ? 'The story list did not load.' : null}
-        {status === 'ready' ? 'The number is the hot list for that window. A status filters the list.' : null}
+        {status === 'ready' && countries.length > 0
+          ? 'The number is the hot list for the selected countries. A status filters the list.'
+          : null}
+        {status === 'ready' && countries.length === 0
+          ? 'The list is worldwide breaking news. Add a country to load a hot list.'
+          : null}
       </p>
       <label className="relative mt-3 block">
         <span className="sr-only">Search this region</span>

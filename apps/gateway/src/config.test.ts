@@ -14,6 +14,7 @@ const limits = {
   CATEGORY_ARTICLES_CAP: '100',
   FEED_RETENTION_DAYS: '14',
   HOT_NEWS_CAP: '20',
+  HOT_COUNTRY_CAP: '3',
   BRIEF_WINDOW_HOURS: '48',
   INFERENCE_URL: 'http://127.0.0.1:8000',
   INFERENCE_SECRET: 'local-inference-secret',

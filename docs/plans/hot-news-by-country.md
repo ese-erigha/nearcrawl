@@ -4,7 +4,7 @@ A home visit passes the visitor country. The gateway returns a short list of rec
 
 One article can mention places in many countries. `article_countries` stores one row for each distinct country on that article. A visitor in any of those countries sees the story.
 
-The globe pin stays one place. That place is the first `locations_mentioned` entry with `lat` and `lng` whose `name` appears in the title or the opening. The home list keeps a story when that pin is inside the country border.
+The globe pin stays one place. That place is the first `locations_mentioned` entry with `lat` and `lng` whose `name` appears in the title or the opening. The home list keeps a story when `article_countries` contains a requested code.
 
 ## Fields from APITube
 

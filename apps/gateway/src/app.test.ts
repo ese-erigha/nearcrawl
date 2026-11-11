@@ -106,6 +106,30 @@ describe('gateway routes', () => {
     assert.equal(response.status, 400)
   })
 
+  it('when the country value has no comma, then the hot list returns 200', async () => {
+    const response = await request('/api/articles?country=JP')
+    assert.equal(response.status, 200)
+    const body = (await response.json()) as { articles: unknown[] }
+    assert.ok(Array.isArray(body.articles))
+  })
+
+  it('when countries are separated by a comma, then the hot list returns 200', async () => {
+    const response = await request('/api/articles?country=JP,AR')
+    assert.equal(response.status, 200)
+    const body = (await response.json()) as { articles: unknown[] }
+    assert.ok(Array.isArray(body.articles))
+  })
+
+  it('when the country list is longer than the cap, then the hot list returns 400', async () => {
+    const response = await request('/api/articles?country=JP,AR,CA,DE')
+    assert.equal(response.status, 400)
+  })
+
+  it('when a country code is not two letters, then the hot list returns 400', async () => {
+    const response = await request('/api/articles?country=JP,Argentina')
+    assert.equal(response.status, 400)
+  })
+
   it('when the window is longer than the feed, then the hot list returns 400', async () => {
     const response = await request('/api/articles?country=JP&windowHours=900')
     assert.equal(response.status, 400)

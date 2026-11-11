@@ -140,7 +140,7 @@ describe('MemoryArticleRepository', () => {
         longitude: 2.35,
         is_breaking: false,
         share_count: 50,
-        country_codes: ['US'],
+        country_codes: ['FR'],
       }),
       row({
         id: 'breaking',
@@ -148,7 +148,7 @@ describe('MemoryArticleRepository', () => {
         longitude: 2.35,
         is_breaking: true,
         share_count: 1,
-        country_codes: ['ES'],
+        country_codes: ['FR'],
       }),
       row({
         id: 'united-states',
@@ -156,12 +156,12 @@ describe('MemoryArticleRepository', () => {
         longitude: -74.01,
         is_breaking: true,
         share_count: 99,
-        country_codes: ['FR'],
+        country_codes: ['US'],
       }),
     ])
 
     const rows = await repository.listHotByCountry({
-      countryCode: 'FR',
+      countryCodes: ['FR'],
       publishedAfter: new Date('2026-01-01T00:00:00.000Z'),
       limit: 20,
     })
@@ -169,6 +169,25 @@ describe('MemoryArticleRepository', () => {
     assert.deepEqual(
       rows.map((item) => item.id),
       ['breaking', 'shares'],
+    )
+  })
+
+  it('when two countries are requested, then each country keeps its own page', async () => {
+    const repository = new MemoryArticleRepository([
+      row({ id: 'paris-loud', latitude: 48.86, longitude: 2.35, share_count: 9, country_codes: ['FR'] }),
+      row({ id: 'paris-quiet', latitude: 48.85, longitude: 2.35, share_count: 1, country_codes: ['FR'] }),
+      row({ id: 'new-york', latitude: 40.71, longitude: -74.01, share_count: 2, country_codes: ['US'] }),
+    ])
+
+    const rows = await repository.listHotByCountry({
+      countryCodes: ['FR', 'US'],
+      publishedAfter: new Date('2026-01-01T00:00:00.000Z'),
+      limit: 1,
+    })
+
+    assert.deepEqual(
+      rows.map((item) => item.id),
+      ['paris-loud', 'new-york'],
     )
   })
 

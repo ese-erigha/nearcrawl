@@ -25,10 +25,13 @@ export async function listDailyBrief(country: string): Promise<{ articles: Artic
   return { articles: body.articles, summary: body.summary }
 }
 
-export async function listHotNews(country: string, windowHours?: number): Promise<Article[]> {
-  const params = new URLSearchParams({ country })
+export async function listHotNews(countries: readonly string[], windowHours?: number): Promise<Article[]> {
+  const params = new URLSearchParams()
   if (windowHours !== undefined) params.set('windowHours', String(windowHours))
-  return readArticles(`/api/articles?${params}`)
+  const extra = params.toString()
+  const country = `country=${countries.join(',')}`
+  const query = extra.length === 0 ? country : `${country}&${extra}`
+  return readArticles(`/api/articles?${query}`)
 }
 
 export async function listBreakingNews(): Promise<Article[]> {
@@ -50,7 +53,7 @@ export async function listSpatialNews(box: NewsBox): Promise<Article[]> {
 }
 
 export async function listPreferenceStories(preferences: PreferenceQuery): Promise<Article[]> {
-  const countryLoads = preferences.homeCountryCodes.map((code) => listHotNews(code, BRIEF_WINDOW_HOURS))
+  const countryLoads = preferences.homeCountryCodes.length === 0 ? [] : [listHotNews(preferences.homeCountryCodes, BRIEF_WINDOW_HOURS)]
   const nameLoads = preferences.trackedNames
     .map((name) => name.trim())
     .filter((name) => name.length >= 2)

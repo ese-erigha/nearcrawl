@@ -12,10 +12,17 @@ function windowHours(maxWindowHours: number) {
   return z.coerce.number().int().min(1).max(maxWindowHours).optional()
 }
 
-export function hotNewsQuerySchema(maxWindowHours: number) {
+function countryList(maxCountries: number) {
+  return z
+    .string()
+    .transform((value) => value.split(','))
+    .pipe(z.array(countryCodeSchema).min(1).max(maxCountries))
+}
+
+export function hotNewsQuerySchema(maxWindowHours: number, maxCountries: number) {
   return z
     .object({
-      country: countryCodeSchema,
+      country: countryList(maxCountries),
       windowHours: windowHours(maxWindowHours),
     })
     .strict()

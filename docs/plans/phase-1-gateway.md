@@ -137,7 +137,7 @@ Errors:
 
 ### `GET /api/articles`
 
-The hot list for one country. `country` is a two-letter code. A story stays when its pin is inside that country's border. `windowHours` is optional. The default window is `FEED_RETENTION_DAYS`. The maximum is that same window. Order is breaking, then share count, then `published_at`. The cap is `HOT_NEWS_CAP`.
+The hot list for one or more countries. `country` is one two-letter code, or several codes separated by a comma. The list holds at most `HOT_COUNTRY_CAP` codes. A story stays when `article_countries` contains one of those codes. `windowHours` is optional. The default window is `FEED_RETENTION_DAYS`. The maximum is that same window. One query reads the list. The order is breaking, then share count, then `published_at`. The whole list stops at `HOT_NEWS_CAP`. Each selected country receives an equal share of that cap. Spare slots go to the countries that still have stories, in that same order. A duplicate id stays once.
 
 `GET /api/articles/breaking` is the world breaking list for the ticker and the dock. The window is the feed retention. Order is `published_at` descending.
 

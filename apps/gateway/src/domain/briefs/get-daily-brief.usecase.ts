@@ -13,7 +13,7 @@ const summarySchema = z.object({ summary: z.string() }).strict()
 
 export async function getDailyBrief(country: string): Promise<{ articles: Article[]; summary: string }> {
   const config = getConfig()
-  const listed = await listHotNews(country, config.briefWindowHours)
+  const listed = await listHotNews([country], config.briefWindowHours)
   if (listed.articles.length === 0) return { articles: [], summary: '' }
   const summary = await summarizeStories(listed.articles)
   return { articles: listed.articles, summary }

@@ -114,22 +114,39 @@ describe('upsertArticlesSql', () => {
 })
 
 describe('hotNewsSql', () => {
-  it('when the hot country is France, then the pin must fall inside that border', () => {
+  it('when the hot country is France, then the statement matches that country code', () => {
     const compiled = compileSql(
       hotNewsSql({
-        countryPolygon: 'POLYGON((2 48,3 48,3 49,2 49,2 48))',
+        countryCodes: ['FR'],
         publishedAfter: new Date('2026-10-01T00:00:00.000Z'),
         limit: 20,
       }),
     )
 
-    assert.match(compiled.sql, /ST_Covers/)
+    assert.match(compiled.sql, /country_code IN/)
     assert.match(compiled.sql, /is_duplicate = false/)
     assert.match(compiled.sql, /is_breaking DESC, articles.share_count DESC, articles.published_at DESC/)
-    assert.equal(compiled.sql.includes('JOIN article_countries'), false)
+    assert.equal(compiled.sql.includes('ST_Covers'), false)
+    assert.equal(compiled.sql.includes('UNION ALL'), false)
     assert.equal(compiled.sql.includes('now()'), false)
-    assert.equal(compiled.params.includes('POLYGON((2 48,3 48,3 49,2 49,2 48))'), true)
+    assert.equal(compiled.params.includes('FR'), true)
     assert.equal(compiled.params.includes(20), true)
+  })
+
+  it('when two countries are requested, then one statement matches the code list', () => {
+    const compiled = compileSql(
+      hotNewsSql({
+        countryCodes: ['CA', 'AR'],
+        publishedAfter: new Date('2026-10-01T00:00:00.000Z'),
+        limit: 20,
+      }),
+    )
+
+    assert.match(compiled.sql, /country_code IN/)
+    assert.equal(compiled.sql.includes('UNION ALL'), false)
+    assert.equal(compiled.params.includes('CA'), true)
+    assert.equal(compiled.params.includes('AR'), true)
+    assert.equal(compiled.params.filter((param) => param === 20).length, 1)
   })
 })
 

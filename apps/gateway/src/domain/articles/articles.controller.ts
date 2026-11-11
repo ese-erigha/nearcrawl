@@ -19,7 +19,7 @@ app.get(
   '/',
   handleErrors(async (c) => {
     const config = getConfig()
-    const query = hotNewsQuerySchema(config.feedRetentionDays * HOURS_PER_DAY).parse(c.req.query())
+    const query = hotNewsQuerySchema(config.feedRetentionDays * HOURS_PER_DAY, config.hotCountryCap).parse(c.req.query())
     const response = await listHotNews(query.country, query.windowHours)
     return c.json(response)
   }),

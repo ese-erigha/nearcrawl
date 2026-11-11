@@ -1,21 +1,31 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import type { Article } from '../articles/article.ts'
+import { regionName } from '../articles/article.ts'
 import { useLiveNews } from '../articles/use-live-news.ts'
 import { listHotNews, listSpatialNews, WORLD_BOX, type NewsBox } from '../articles/news-api.ts'
 import { BreakingDock } from '../map/breaking-dock.tsx'
+import { countryFocus } from '../map/country-frame.ts'
+import { COUNTRY_PICK_CAP } from '../map/country-choices.ts'
 import { GlobeCanvas } from '../map/globe-canvas.tsx'
 import { DETAIL_MAP_INSET } from '../map/globe-math.ts'
 import { HOT_PANEL_INSET, HotPanel } from '../map/hot-panel.tsx'
 import { StoryPanel } from '../map/story-panel.tsx'
+
+const NO_COUNTRIES: string[] = []
 
 type ListStatus = 'loading' | 'ready' | 'error'
 
 export function MapScreen() {
   const { place, placeReady, breaking } = useLiveNews()
   const [panelOpen, setPanelOpen] = useState(true)
+  const [countries, setCountries] = useState<string[] | null>(null)
   const [hot, setHot] = useState<Article[]>([])
   const [hotStatus, setHotStatus] = useState<ListStatus>('loading')
+  if (placeReady && countries === null) {
+    setCountries(place ? [place.code] : [])
+  }
+  const selectedCodes = countries ?? NO_COUNTRIES
   const [pins, setPins] = useState<Article[]>([])
   const [selected, setSelected] = useState<Article | null>(null)
 
@@ -46,30 +56,31 @@ export function MapScreen() {
   }, [])
 
   useEffect(() => {
-    if (!placeReady || !place) return
+    if (selectedCodes.length === 0) return
     let cancelled = false
     const load = async () => {
       setHotStatus('loading')
-      const stories = await listHotNews(place.code)
+      const stories = await listHotNews(selectedCodes)
       if (cancelled) return
       setHot(stories)
       setHotStatus('ready')
     }
     void load().catch(() => {
-      if (cancelled) return
-      setHotStatus('error')
+      if (!cancelled) setHotStatus('error')
     })
     return () => {
       cancelled = true
     }
-  }, [place, placeReady])
+  }, [selectedCodes])
 
-  const list = place ? hot : breaking
-  const title = !placeReady ? 'Finding your country' : place ? `Hot in ${place.name}` : 'Breaking worldwide'
-  const subtitle = !placeReady ? 'The list follows this device.' : place ? 'Hot where you are.' : 'The newest breaking stories.'
-  const status: ListStatus = place ? hotStatus : placeReady ? 'ready' : 'loading'
+  const selectedCountries = selectedCodes.map((code) => ({ code, name: regionName(code) }))
+  const hasCountry = selectedCodes.length > 0
+  const list = hasCountry ? hot : breaking
+  const title = !placeReady ? 'Finding your country' : hasCountry ? 'Hot in' : 'Breaking worldwide'
+  const subtitle = countrySubtitle(placeReady, selectedCountries)
+  const status: ListStatus = !placeReady ? 'loading' : hasCountry ? hotStatus : 'ready'
   const known = [...list, ...pins, ...breaking]
-  const home = place ? { latitude: place.latitude, longitude: place.longitude } : null
+  const home = useMemo(() => countryFocus(selectedCodes), [selectedCodes])
 
   const selectStory = (id: string) => {
     const story = known.find((item) => item.id === id) ?? null
@@ -105,6 +116,15 @@ export function MapScreen() {
           onClose={() => setPanelOpen(false)}
           selectedId={selected?.id ?? null}
           onSelect={selectStory}
+          countries={selectedCountries}
+          onAddCountry={(code) =>
+            setCountries((current) => {
+              const codes = current ?? []
+              if (codes.includes(code) || codes.length >= COUNTRY_PICK_CAP) return codes
+              return [...codes, code]
+            })
+          }
+          onRemoveCountry={(code) => setCountries((current) => (current ?? []).filter((item) => item !== code))}
         />
       ) : (
         <button
@@ -119,4 +139,12 @@ export function MapScreen() {
       {selected ? <StoryPanel story={selected} onClose={() => setSelected(null)} /> : null}
     </div>
   )
+}
+
+function countrySubtitle(placeReady: boolean, countries: { name: string }[]): string {
+  if (!placeReady) return 'The list follows this device.'
+  const name = countries[0]?.name
+  if (countries.length === 1 && name) return `The globe faces ${name}.`
+  if (countries.length > 1) return 'The globe frames the set.'
+  return 'The newest breaking stories.'
 }

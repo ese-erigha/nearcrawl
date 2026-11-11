@@ -40,6 +40,7 @@ type Flight = {
 type GlobeHome = {
   latitude: number
   longitude: number
+  radiusScale: number
 }
 
 type GlobeCanvasProps = {
@@ -86,7 +87,6 @@ export function GlobeCanvas({ stories, insetLeft, insetRight, insetBottom, selec
   const onSelectRef = useRef(onSelect)
   const onSettleRef = useRef(onSettle)
   const homeRef = useRef(home)
-  const touchedRef = useRef(false)
   const selectedRef = useRef(selectedId)
   const pointerRef = useRef({ x: 0, y: 0, moved: false })
   const draggingRef = useRef(false)
@@ -116,9 +116,10 @@ export function GlobeCanvas({ stories, insetLeft, insetRight, insetBottom, selec
 
   useEffect(() => {
     homeRef.current = home
-    if (!home || touchedRef.current) return
+    if (!home) return
     viewRef.current.rotation = -home.longitude
     viewRef.current.latitude = home.latitude
+    viewRef.current.radiusScale = home.radiusScale
   }, [home])
 
   useEffect(() => {
@@ -156,6 +157,7 @@ export function GlobeCanvas({ stories, insetLeft, insetRight, insetBottom, selec
     if (place) {
       viewRef.current.rotation = -place.longitude
       viewRef.current.latitude = place.latitude
+      viewRef.current.radiusScale = place.radiusScale
     } else {
       viewRef.current.rotation = -Math.max(-150, Math.min(150, offsetHours * 15))
     }
@@ -318,7 +320,6 @@ export function GlobeCanvas({ stories, insetLeft, insetRight, insetBottom, selec
         className="absolute inset-0 h-full w-full cursor-grab touch-none active:cursor-grabbing"
         aria-label="Revolving globe"
         onPointerDown={(event) => {
-          touchedRef.current = true
           draggingRef.current = true
           pointerRef.current = { x: event.clientX, y: event.clientY, moved: false }
           lastXRef.current = event.clientX

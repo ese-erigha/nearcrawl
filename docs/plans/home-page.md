@@ -41,11 +41,11 @@ The design notes in that repo say the globe carries the drama and the panels sta
 ## What the visitor gets
 
 1. The page reads the device location.
-2. `GET /api/articles?country=` loads the hot list for that country. A story stays when its pin is inside the country border. Breaking stories come first, then stories with more shares, then newer stories. `windowHours=48` is the brief window. The default window is the 14-day feed.
+2. `GET /api/articles?country=` loads the hot list. Several countries share that value, separated by a comma. The picker holds at most 3 countries. One request returns the list. A story stays when `article_countries` contains one of those codes. The whole list stops at 20 stories. Each selected country gets an equal share of those 20. Spare slots go to the countries that still have stories. Breaking stories come first, then stories with more shares, then newer stories. The default window is the 14-day feed.
 3. The globe opens on that country and revolves. A drag pauses it. The spin starts again 4 seconds after the drag ends, from that same place. The first pins come from `GET /api/spatial/news` for the whole world. A drag loads the box in view from the same route.
 4. The left list is that hot list. Every visitor in the country sees the same list and the same order. A drag does not replace this list. After sign-up, this list follows the home countries, the topics, and the tracked names.
 5. The search field filters the loaded hot list. It does not call the inference search.
-6. Daily brief opens the public brief for that country. It calls `GET /api/articles?country=&windowHours=48`. It does not require an account. When the device location fails, the brief uses `GET /api/articles/breaking`. `/brief/user` calls the same country route for each saved country, and `GET /api/articles/mentions?q=` for each tracked name.
+6. Daily brief opens the public brief for that country. It calls `GET /api/briefs?country=`. It does not require an account. When the device location fails, the brief uses `GET /api/articles/breaking`. `/brief/user` calls `GET /api/articles` once with each saved country, and `GET /api/articles/mentions?q=` for each tracked name.
 7. Sign up is visible. It does not block the globe, the list, the search, or the brief.
 
 ## Credit
@@ -58,14 +58,14 @@ The credit sits at the top left, on the same line as the name, in the slot the r
 
 A pin on the live reference globe moved while the page sat still. The globe code in that repo starts the spin again 4 seconds after a drag or a scroll. The spin is about 2.2 degrees a second. It keeps the longitude where the drag stopped. A close zoom stops the spin until the view is wide again. A request for reduced motion stops the spin.
 
-The NearCrawl globe uses that same rule. The first frame faces the device country. The hot list on the left stays that country. Pins ride the earth, so they travel as the globe turns. A drag loads the box in view once, from `GET /api/spatial/news`. The spin does not send a new query on every frame.
+The NearCrawl globe uses that same rule. The first frame faces the device country. The hot list starts as that country. The visitor can add countries. One country faces that country. Several countries frame a box around the set. Pins ride the earth, so they travel as the globe turns. A drag loads the box in view once, from `GET /api/spatial/news`. The spin does not send a new query on every frame.
 
 ## Three jobs
 
 Each strip answers a different question.
 
 - The ticker is the wire. It carries the newest breaking title in the world, one title at a time. The next title rolls in and the previous title rolls out. A click opens that story. The ticker stays the world wire after sign-up. It does not switch to the preference list.
-- The left panel is yours. Before sign-up it is the hot list for the device country. That list includes breaking stories and the other hot stories. After sign-up it follows the home countries, the topics, and the tracked names.
+- The left panel is yours. Before sign-up it starts as the hot list for the device country. The visitor can add countries. That list includes breaking stories and the other hot stories. After sign-up it follows the home countries, the topics, and the tracked names.
 - The bottom dock is global breaking news. The label is "Global Breaking News". The cards sit in that one frame.
 
 A title can slide through the ticker and also sit in a list. The ticker is one line in the bar.
