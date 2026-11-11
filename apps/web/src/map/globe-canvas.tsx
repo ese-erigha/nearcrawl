@@ -91,7 +91,6 @@ export function GlobeCanvas({ stories, insetLeft, insetRight, insetBottom, selec
   const selectedRef = useRef(selectedId)
   const pointerRef = useRef({ x: 0, y: 0, moved: false })
   const draggingRef = useRef(false)
-  const overGlobeRef = useRef(false)
   const globeFrameRef = useRef({ x: 0, y: 0, radius: 0 })
   const lastXRef = useRef(0)
   const resumeAtRef = useRef(0)
@@ -205,8 +204,7 @@ export function GlobeCanvas({ stories, insetLeft, insetRight, insetBottom, selec
       }
       const flight = flightRef.current
       const focused = goalRef.current.id !== null
-      const spinning =
-        overGlobeRef.current && !reduced && !draggingRef.current && !focused && !flight && now >= resumeAtRef.current
+      const spinning = !reduced && !draggingRef.current && !focused && !flight && now >= resumeAtRef.current
       if (flight) {
         const t = flight.duration === 0 ? 1 : easeOutCubic((now - flight.started) / flight.duration)
         viewRef.current = {
@@ -337,7 +335,6 @@ export function GlobeCanvas({ stories, insetLeft, insetRight, insetBottom, selec
         onPointerMove={(event) => {
           const point = pointerPoint(event.currentTarget, event.clientX, event.clientY)
           const onGlobe = insideGlobe(point, globeFrameRef.current)
-          overGlobeRef.current = onGlobe
           mouseRef.current = onGlobe ? point : { x: -10_000, y: -10_000 }
           const onPin = onGlobe && pinsRef.current.some((pin) => Math.hypot(pin.x - point.x, pin.y - point.y) <= PIN_REACH)
           event.currentTarget.style.cursor = draggingRef.current ? 'grabbing' : onPin ? 'pointer' : onGlobe ? 'grab' : 'default'
@@ -348,10 +345,9 @@ export function GlobeCanvas({ stories, insetLeft, insetRight, insetBottom, selec
           }
           const delta = event.clientX - lastXRef.current
           lastXRef.current = event.clientX
-          viewRef.current.rotation -= delta * 0.35
+          viewRef.current.rotation += delta * 0.35
         }}
         onPointerLeave={() => {
-          overGlobeRef.current = false
           mouseRef.current = { x: -10_000, y: -10_000 }
         }}
         onPointerUp={(event) => {
