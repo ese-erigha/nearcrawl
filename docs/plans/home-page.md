@@ -112,7 +112,7 @@ A breaking row paints the word Breaking in the breaking color. The dock label is
 
 The brief page is a document. The globe is gone. The same top bar stays, and Daily brief is the current destination.
 
-The list is the device country from `GET /api/articles?country=&windowHours=48`. Breaking stories are the first group. Also hot stories are the second group. When the device location fails, the list is the breaking feed, cut to 48 hours.
+The list is the device country from `GET /api/briefs?country=`. The server applies the 48-hour window, then summarizes those stories. Breaking stories are the first group. Also hot stories are the second group. When the device location fails, the list is the breaking feed, cut to 48 hours, and the summary stays empty.
 
 `/brief/user` is the same document for a visitor who saved preferences. The sample set is the United States, the United Kingdom, Nigeria, and Germany, plus Finance and Disaster. A tracked name can pull one more story. The device-country storm stays on `/brief`.
 
@@ -120,8 +120,8 @@ The page reads top to bottom:
 
 - A breadcrumb: Live map, then Daily brief.
 - A date line, then one large title: what is hot in that country in the last 48 hours.
-- One byline with the source count and the time.
-- One opening paragraph. It uses the first story descriptions.
+- One byline. It reads: researched by NearCrawl from the source count, then the time. Counts are live.
+- One opening paragraph. It is the model summary of the stories in the list. When the model is down, the paragraph stays empty.
 - Three actions: Open the live map, Copy as a thread, and Read the full report. The report link moves to the list on this page.
 - A count card. The large number is the story count. Breaking, also hot, and sources split it. Politics, finance, disaster, and shares sit under that split.
 - A dotted world map. Pins mark the stories in the list. A breaking pin is solid red. An also-hot pin is hollow.
@@ -142,7 +142,7 @@ There is no Slack bot and no RSS feed. Those belong to the reference product. A 
 | What is hot in Japan                       |  5                           |    |
 | in the last 48 hours                       |  in 1 country                |    |
 |                                            | Breaking | Also hot | Sources|    |
-| From 5 sources in Japan, 8 Nov 2026.       |    2     |    3     |   5    |    |
+| Researched by NearCrawl. Counts are live. |    2     |    3     |   5    |    |
 |                                            | Politics                  2  |    |
 | The last 48 hours in Japan turn on 5 ...   | Finance                   1  |    |
 |                                            | Disaster                  2  |    |

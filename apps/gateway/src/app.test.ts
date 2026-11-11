@@ -88,6 +88,19 @@ describe('gateway routes', () => {
     assert.ok(Array.isArray(body.details))
   })
 
+  it('when country is missing, then the daily brief returns 400', async () => {
+    const response = await request('/api/briefs')
+    assert.equal(response.status, 400)
+  })
+
+  it('when the country has no stories in the brief window, then the summary is empty', async () => {
+    const response = await request('/api/briefs?country=SG')
+    assert.equal(response.status, 200)
+    const body = (await response.json()) as { articles: Article[]; summary: string }
+    assert.deepEqual(body.articles, [])
+    assert.equal(body.summary, '')
+  })
+
   it('when country is missing, then the hot list returns 400', async () => {
     const response = await request('/api/articles')
     assert.equal(response.status, 400)

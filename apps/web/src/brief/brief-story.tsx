@@ -16,11 +16,10 @@ export function BriefStory({ item }: BriefStoryProps) {
       </span>
       <div className="min-w-0">
         <h3 className="flex items-start gap-2.5 text-[16.5px] leading-snug font-medium tracking-[-0.005em] text-pretty text-ink">
-          {item.story.isBreaking ? null : <StoryMark />}
           <span className="sr-only">{item.story.isBreaking ? 'Breaking:' : 'Also hot:'}</span>
           <span>{item.story.title}</span>
         </h3>
-        <p className="mt-1.5 max-w-[68ch] text-[14.5px] leading-relaxed text-pretty text-ink-2">{item.story.body}</p>
+        <StoryLead text={item.story.description?.trim() || item.story.body.trim()} />
         <div className="mt-3.5 flex flex-wrap items-center gap-1.5">
           <span className={BRIEF_CHIP}>{item.story.sourceName}</span>
           <a href={item.story.sourceUrl} target="_blank" rel="noreferrer" className={BRIEF_TERTIARY}>
@@ -32,10 +31,9 @@ export function BriefStory({ item }: BriefStoryProps) {
   )
 }
 
-function StoryMark() {
-  return (
-    <svg width="9" height="9" viewBox="0 0 10 10" className="mt-[6px] shrink-0" aria-hidden>
-      <circle cx="5" cy="5" r="3.75" fill="none" stroke="#dedede" strokeWidth="1.5" />
-    </svg>
-  )
+function StoryLead({ text }: { text: string }) {
+  const lead = text.trim()
+  if (!lead) return null
+  return <p className="mt-1.5 line-clamp-3 max-w-[68ch] text-[14.5px] leading-relaxed text-pretty text-ink-2">{lead}</p>
 }
+

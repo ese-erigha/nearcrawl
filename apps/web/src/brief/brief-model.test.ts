@@ -63,6 +63,20 @@ describe('buildCountryBrief', () => {
     assert.ok(brief.groups[1]?.items.every((item) => !item.story.isBreaking))
   })
 
+  it('when the country brief builds, then the byline names NearCrawl and the live counts', () => {
+    const brief = buildCountryBrief([story('first')], 'Canada', NOW)
+    assert.equal(
+      brief.byline,
+      'Researched by NearCrawl from 1 source, 8 Nov 2026 at 12:00 UTC. Counts are live.',
+    )
+  })
+
+  it('when the country brief receives a model summary, then the page keeps that paragraph', () => {
+    const brief = buildCountryBrief([story('first')], 'Canada', NOW, 'Ports closed overnight.')
+    assert.equal(brief.summary, 'Ports closed overnight.')
+    assert.equal(brief.shareText, 'What is hot in Canada, 8 Nov 2026. Ports closed overnight.')
+  })
+
   it('when the brief numbers the list, then also hot continues the count', () => {
     const brief = buildCountryBrief(
       [story('first', { isBreaking: true }), story('later', { isBreaking: false })],

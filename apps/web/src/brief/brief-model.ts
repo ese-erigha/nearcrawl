@@ -48,7 +48,7 @@ export type BriefView = {
   byline: string
   morningNote: string
   dayLabel: string
-  lead: string
+  summary: string
   storyCount: number
   countryCount: number
   breakingCount: number
@@ -78,22 +78,25 @@ export function storyMatchesPreferences(story: BriefStory, preferences: SavedPre
   return preferences.trackedNames.some((name) => name.trim().length > 0 && haystack.includes(name.trim().toLowerCase()))
 }
 
-export function buildCountryBrief(stories: Article[], placeName: string | null, now = Date.now()): BriefView {
+export function buildCountryBrief(
+  stories: Article[],
+  placeName: string | null,
+  now = Date.now(),
+  summary = '',
+): BriefView {
   const inWindow = storiesInBrief(stories, now)
-  const sourceWord = inWindow.length === 1 ? 'source' : 'sources'
   const sourceCount = new Set(inWindow.map((story) => story.sourceName)).size
+  const sourceWord = sourceCount === 1 ? 'source' : 'sources'
   const place = placeName ?? 'the world'
   const shareTitle = `What is hot in ${place}, ${shortDate(now)}`
-  const byline = placeName
-    ? `From ${sourceCount} ${sourceWord} in ${placeName}, ${compiledLabel(now)}.`
-    : `From ${sourceCount} ${sourceWord}, ${compiledLabel(now)}.`
+  const byline = `Researched by NearCrawl from ${sourceCount} ${sourceWord}, ${compiledLabel(now)}. Counts are live.`
   return assembleBrief(inWindow, now, {
     headline: placeName ? `What is hot in ${placeName} in the last 48 hours` : 'What is hot in the last 48 hours',
     byline,
     morningNote: placeName
       ? `The ${placeName} brief is this page. Copy the link, or open the same list on the map.`
       : 'This brief is the breaking list. Copy the link, or open the same list on the map.',
-    leadPlace: place,
+    summary,
     shareTitle,
   })
 }
@@ -108,7 +111,7 @@ export function buildUserBrief(stories: Article[], preferences: SavedPreferences
     headline: 'What is hot for you in the last 48 hours',
     byline: `${joinWords(countries)}. ${joinWords(topics)}. Tracking ${joinWords(names)}. ${compiledLabel(now)}.`,
     morningNote: 'This brief follows your saved countries, topics, and names.',
-    leadPlace: 'your list',
+    summary: '',
     shareTitle,
   })
 }
@@ -116,7 +119,7 @@ export function buildUserBrief(stories: Article[], preferences: SavedPreferences
 function assembleBrief(
   stories: Article[],
   now: number,
-  copy: { headline: string; byline: string; morningNote: string; leadPlace: string; shareTitle: string },
+  copy: { headline: string; byline: string; morningNote: string; summary: string; shareTitle: string },
 ): BriefView {
   const breaking = stories.filter((story) => story.isBreaking)
   const alsoHot = stories.filter((story) => !story.isBreaking)
@@ -125,27 +128,27 @@ function assembleBrief(
     group('also-hot', 'Also hot', alsoHot, breaking.length + 1),
   ].filter((entry) => entry.items.length > 0)
   const items = groups.flatMap((entry) => entry.items)
-  const lead = briefLead(copy.leadPlace, [...breaking, ...alsoHot])
+  const topicCounts = TOPIC_ROWS.map((topic) => ({
+    label: topic.label,
+    count: stories.filter((story) => story.categoryId === topic.id).length,
+  }))
   return {
     headline: copy.headline,
     byline: copy.byline,
     morningNote: copy.morningNote,
     dayLabel: dayLabel(now),
-    lead,
+    summary: copy.summary,
     storyCount: stories.length,
     countryCount: new Set(stories.flatMap((story) => story.countryCodes)).size,
     breakingCount: breaking.length,
     alsoHotCount: alsoHot.length,
     sourceCount: new Set(stories.map((story) => story.sourceName)).size,
     shareTotal: stories.reduce((total, story) => total + story.shareCount, 0),
-    topicCounts: TOPIC_ROWS.map((topic) => ({
-      label: topic.label,
-      count: stories.filter((story) => story.categoryId === topic.id).length,
-    })),
+    topicCounts,
     groups,
-    thread: briefThread(copy.shareTitle, lead, items),
+    thread: briefThread(copy.shareTitle, copy.summary, items),
     shareTitle: copy.shareTitle,
-    shareText: `${copy.shareTitle}. ${lead}`,
+    shareText: copy.summary ? `${copy.shareTitle}. ${copy.summary}` : copy.shareTitle,
   }
 }
 
@@ -167,23 +170,10 @@ function group(id: string, label: string, stories: Article[], start: number): Br
   }
 }
 
-function briefLead(place: string, stories: Article[]): string {
-  const lines = stories
-    .map((story) => story.description?.trim() ?? '')
-    .filter((line) => line.length > 0)
-    .slice(0, 3)
-  const count = stories.length === 1 ? 'one story' : `${stories.length} stories`
-  const head =
-    place === 'your list'
-      ? `The last 48 hours for you turn on ${count}.`
-      : `The last 48 hours in ${place} turn on ${count}.`
-  if (lines.length === 0) return head
-  return `${head} ${lines.join(' ')}`
-}
-
-function briefThread(title: string, lead: string, items: BriefItem[]): string[] {
+function briefThread(title: string, summary: string, items: BriefItem[]): string[] {
   const posts = items.map((item) => `${item.number}. ${item.story.title}. ${item.story.description ?? ''}`.trim())
-  return [clip(`${title}. ${lead}`), ...posts.map((post) => clip(post))]
+  const opening = summary ? `${title}. ${summary}` : title
+  return [clip(opening), ...posts.map((post) => clip(post))]
 }
 
 function clip(text: string): string {

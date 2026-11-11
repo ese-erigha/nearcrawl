@@ -17,6 +17,14 @@ type PreferenceQuery = {
   trackedNames: readonly string[]
 }
 
+export async function listDailyBrief(country: string): Promise<{ articles: Article[]; summary: string }> {
+  const params = new URLSearchParams({ country })
+  const response = await fetch(`/api/briefs?${params}`)
+  if (!response.ok) throw new Error('The brief did not load.')
+  const body = (await response.json()) as { articles: Article[]; summary: string }
+  return { articles: body.articles, summary: body.summary }
+}
+
 export async function listHotNews(country: string, windowHours?: number): Promise<Article[]> {
   const params = new URLSearchParams({ country })
   if (windowHours !== undefined) params.set('windowHours', String(windowHours))

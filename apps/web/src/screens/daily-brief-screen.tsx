@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
 
 import { useLiveNews } from '../articles/use-live-news.ts'
-import { listHotNews, listPreferenceStories } from '../articles/news-api.ts'
+import { listDailyBrief, listPreferenceStories } from '../articles/news-api.ts'
 import { BriefCrumbs, BriefHeader } from '../brief/brief-header.tsx'
 import { BriefDotMap } from '../brief/brief-dot-map.tsx'
 import { BriefGroup } from '../brief/brief-group.tsx'
 import { BriefMetricCard } from '../brief/brief-metric-card.tsx'
-import { BRIEF_WINDOW_HOURS, buildCountryBrief, buildUserBrief, storiesInBrief, type BriefView } from '../brief/brief-model.ts'
+import { buildCountryBrief, buildUserBrief, storiesInBrief, type BriefView } from '../brief/brief-model.ts'
 import { BriefRail } from '../brief/brief-rail.tsx'
 import { SAVED_PREFERENCES } from '../brief/saved-preferences.ts'
 import { PATH } from '../shell/navigation.constants.ts'
@@ -33,9 +33,11 @@ export function DailyBriefScreen() {
     if (!place && breakingError) return
     let cancelled = false
     const load = async () => {
-      const stories = place ? await listHotNews(place.code, BRIEF_WINDOW_HOURS) : storiesInBrief(breaking)
+      const brief = place
+        ? await countryBrief(place.code, place.name)
+        : buildCountryBrief(storiesInBrief(breaking), null)
       if (cancelled) return
-      setBrief(buildCountryBrief(stories, place?.name ?? null))
+      setBrief(brief)
       setFailed(false)
     }
     void load().catch(() => {
@@ -73,6 +75,11 @@ export function UserBriefScreen() {
   if (failed) return <BriefStatus text="The brief did not load." />
   if (!brief) return <BriefStatus text="Loading the brief." />
   return <BriefDocument brief={brief} crumbs={USER_CRUMBS} />
+}
+
+async function countryBrief(country: string, placeName: string): Promise<BriefView> {
+  const loaded = await listDailyBrief(country)
+  return buildCountryBrief(loaded.articles, placeName, Date.now(), loaded.summary)
 }
 
 function BriefStatus({ text }: { text: string }) {

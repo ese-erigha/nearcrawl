@@ -63,6 +63,47 @@ class CiteParser:
         return [TokenChunk(emit)]
 
 
+async def complete_text(instructions: str, rows: list[dict[str, object]]) -> str:
+    config = get_config()
+    try:
+        async with httpx.AsyncClient(timeout=httpx.Timeout(60.0)) as client:
+            response = await client.post(
+                f"{config.openrouter_base_url}/chat/completions",
+                json={
+                    "model": config.openrouter_model,
+                    "stream": False,
+                    "messages": [
+                        {"role": "system", "content": instructions},
+                        {"role": "user", "content": json.dumps(rows)},
+                    ],
+                },
+                headers={"authorization": f"Bearer {config.openrouter_api_key}"},
+            )
+    except httpx.HTTPError:
+        raise UnavailableError from None
+    if response.status_code != 200:
+        raise UnavailableError
+    return _message_text(response.json())
+
+
+def _message_text(payload: object) -> str:
+    if not isinstance(payload, dict):
+        raise UnavailableError
+    choices = payload.get("choices")
+    if not isinstance(choices, list) or not choices:
+        raise UnavailableError
+    choice = choices[0]
+    if not isinstance(choice, dict):
+        raise UnavailableError
+    message = choice.get("message")
+    if not isinstance(message, dict):
+        raise UnavailableError
+    content = message.get("content")
+    if not isinstance(content, str):
+        raise UnavailableError
+    return content.strip()
+
+
 async def open_completion(
     instructions: str,
     rows: list[dict[str, object]],

@@ -175,7 +175,7 @@ ALTER TABLE article_categories ADD COLUMN score double precision;
 - `articles.body` stores `body`.
 - `articles.source_name` stores `source.domain`.
 - `articles.source_url` stores `href`.
-- `articles.latitude` and `articles.longitude` store the first `locations_mentioned` place with numeric `lat` and `lng`.
+- `articles.latitude` and `articles.longitude` store the first `locations_mentioned` place with numeric `lat` and `lng` whose `name` appears in the title or the opening.
 - `articles.tags` stores `keywords`.
 - `articles.published_at` stores `published_at`.
 - `articles.is_breaking` stores `is_breaking`.

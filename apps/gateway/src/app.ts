@@ -4,6 +4,7 @@ import { contextStorage } from 'hono/context-storage'
 
 import { createConfig, readBindings } from './config.ts'
 import articlesController from './domain/articles/articles.controller.ts'
+import briefsController from './domain/briefs/briefs.controller.ts'
 import spatialNewsController from './domain/articles/spatial-news.controller.ts'
 import categoriesController from './domain/categories/categories.controller.ts'
 import searchController from './domain/search/search.controller.ts'
@@ -32,6 +33,7 @@ app.route('/health', healthRoutes)
 app.route('/api/categories', categoriesController)
 app.route('/api/spatial/news', spatialNewsController)
 app.route('/api/articles', articlesController)
+app.route('/api/briefs', briefsController)
 app.route('/api/stories', storiesController)
 app.route('/api/search', searchController)
 

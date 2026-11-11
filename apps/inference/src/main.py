@@ -10,9 +10,10 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, StreamingResponse
 from starlette.responses import Response
 
+from src.answers.brief import summarize_brief
 from src.answers.compare import load_comparison
 from src.answers.explain import load_explanation
-from src.answers.schema import ComparisonBody, ExplanationBody, SearchBody
+from src.answers.schema import BriefSummaryBody, ComparisonBody, ExplanationBody, SearchBody
 from src.answers.search import load_search
 from src.answers.stream import start_answer
 from src.config import get_config
@@ -105,6 +106,12 @@ def _install_routes(app: FastAPI) -> None:
         require_bearer(request)
         prepared = await load_comparison(body.story_id)
         return _stream(await start_answer(prepared))
+
+    @app.post("/brief-summaries")
+    async def brief_summaries(body: BriefSummaryBody, request: Request) -> dict[str, str]:
+        require_bearer(request)
+        summary = await summarize_brief(body.stories)
+        return {"summary": summary}
 
     @app.post("/search")
     async def search(body: SearchBody, request: Request) -> StreamingResponse:

@@ -2,7 +2,7 @@ import { z } from 'zod'
 
 export const articleIdSchema = z.uuid()
 
-const countryCode = z
+export const countryCodeSchema = z
   .string()
   .trim()
   .regex(/^[A-Za-z]{2}$/, 'country must be two letters')
@@ -15,7 +15,7 @@ function windowHours(maxWindowHours: number) {
 export function hotNewsQuerySchema(maxWindowHours: number) {
   return z
     .object({
-      country: countryCode,
+      country: countryCodeSchema,
       windowHours: windowHours(maxWindowHours),
     })
     .strict()

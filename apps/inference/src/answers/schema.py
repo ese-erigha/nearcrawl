@@ -25,6 +25,18 @@ class ComparisonBody(BaseModel):
         raise ValueError("storyId must not be a uuid")
 
 
+class BriefStoryBody(BaseModel):
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
+    title: str = Field(min_length=1, max_length=500)
+    source_name: str = Field(alias="sourceName", min_length=1, max_length=200)
+    description: str = Field(default="", max_length=500)
+
+
+class BriefSummaryBody(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    stories: list[BriefStoryBody] = Field(min_length=1, max_length=20)
+
+
 class SearchBody(BaseModel):
     model_config = ConfigDict(extra="forbid")
     query: str = Field(min_length=1, max_length=500)

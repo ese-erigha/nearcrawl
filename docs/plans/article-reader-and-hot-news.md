@@ -19,7 +19,7 @@ Each database column has one APITube path. A missing value follows the null rule
 - `body` stores `body`. The column stays `NOT NULL`. When `body` is absent, store `description`. When `description` is also absent, store `title`. Do not read `summary` for this fallback.
 - `source_name` stores `source.domain`.
 - `source_url` stores `href`.
-- `latitude` and `longitude` store the first `locations_mentioned` item whose `lat` and `lng` are both numbers.
+- `latitude` and `longitude` store the first `locations_mentioned` item whose `lat` and `lng` are both numbers and whose `name` appears in the title or the opening.
 - `tags` stores `keywords`. An absent array stores `{}`.
 - `published_at` stores `published_at`.
 - `is_breaking` stores `is_breaking`. An absent flag stores false.

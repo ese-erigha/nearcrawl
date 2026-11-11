@@ -56,7 +56,7 @@ One invocation does these steps in order.
 
 1. Load `id`, `parent_id`, and `medtop_id` from `categories`. That query is the only category list this app uses. Do not import `categoryCatalog`.
 2. Call `apitube.client.ts` for `GET /v1/news/everything`. Page until a page is empty, or until every item on the page is older than the feed window.
-3. Leave out an item with no latitude and longitude. Skip an item whose coordinate is outside the article checks (`latitude` from -90 to 90, `longitude` from -180 to 180). Neither item is written.
+3. Leave out an item with no latitude and longitude. Leave out an item whose place name is missing from the title and the opening. Skip an item whose coordinate is outside the article checks (`latitude` from -90 to 90, `longitude` from -180 to 180). None of these items is written.
 4. File the item, then call `upsertByApitubeId`.
 
 This job does not delete.

@@ -50,7 +50,9 @@ export function BriefHeader({ brief }: BriefHeaderProps) {
         {brief.headline}
       </h1>
       <p className="mt-4 text-[12.5px] leading-relaxed text-ink-4">{brief.byline}</p>
-      <p className="mt-5 max-w-[64ch] text-[17px] leading-relaxed text-pretty text-ink">{brief.lead}</p>
+      {brief.summary ? (
+        <p className="mt-5 line-clamp-6 max-w-[64ch] text-[17px] leading-relaxed text-pretty text-ink">{brief.summary}</p>
+      ) : null}
       <div className="mt-6 grid gap-2 sm:flex sm:flex-wrap sm:items-center">
         <Link to={PATH.MAP} className={BRIEF_PRIMARY}>
           <GlobeHemisphereWest className="size-3.5" /> Open the live map

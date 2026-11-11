@@ -1,6 +1,6 @@
 # Phase 1 backend
 
-Backend work is two parts. Part 1 is `apps/gateway`. Part 2 is `apps/ingestion`. Auth and rate limiting stay out. Product Phase 2 briefs and Phase 3 re-rank are not routes yet.
+Backend work is two parts. Part 1 is `apps/gateway`. Part 2 is `apps/ingestion`. Auth and rate limiting stay out. Phase 3 re-rank is not a route yet. The country daily brief is `GET /api/briefs?country=`.
 
 Only `apps/ingestion` calls APITube. It pulls `/v1/news/everything` and writes Neon. `apps/gateway` reads that table and seals live queries. The gateway never requests APITube.
 
@@ -36,6 +36,7 @@ Phase 1 news is one shared feed. These routes follow the catalog pattern:
 - `GET /api/spatial/news`
 - `POST /api/spatial/news/live`
 - `GET /api/articles?country=`
+- `GET /api/briefs?country=`
 - `GET /api/articles/breaking`
 - `GET /api/articles/mentions?q=`
 - `GET /api/articles/:id`

@@ -31,7 +31,7 @@ const article = {
   keywords: ['bank'],
   is_breaking: true,
   story: { id: 42 },
-  locations_mentioned: [{ lat: null, lng: null }, { lat: 1.3, lng: 103.8 }],
+  locations_mentioned: [{ lat: null, lng: null }, { name: 'Headline', lat: 1.3, lng: 103.8 }],
 }
 
 describe('toNewsItem', () => {
@@ -69,6 +69,30 @@ describe('toNewsItem', () => {
     assert.equal(item, null)
   })
 
+  it('when the place name is past the opening, then the item is left out', () => {
+    const item = toNewsItem({
+      ...article,
+      title: 'Anime news',
+      description: 'A short lead',
+      body: `${'x'.repeat(2000)} Jasper`,
+      locations_mentioned: [{ name: 'Jasper', lat: 52.7, lng: -118.3 }],
+    })
+    assert.equal(item, null)
+  })
+
+  it('when a later place is named in the title, then that place supplies the pin', () => {
+    const item = toNewsItem({
+      ...article,
+      title: 'Game in Edmonton',
+      locations_mentioned: [
+        { name: 'Jasper', lat: 52.7, lng: -118.3 },
+        { name: 'Edmonton', lat: 53.5, lng: -113.5 },
+      ],
+    })
+    assert.equal(item?.latitude, 53.5)
+    assert.equal(item?.longitude, -113.5)
+  })
+
   it('when description is absent and summary has sentences, then the stored description is null', () => {
     const item = toNewsItem({
       ...article,
@@ -87,7 +111,7 @@ describe('toNewsItem', () => {
     const item = toNewsItem({
       ...article,
       locations_mentioned: [
-        { country: 'FR', lat: 48.8, lng: 2.3 },
+        { name: 'Headline', country: 'FR', lat: 48.8, lng: 2.3 },
         { country: 'fr', lat: 45.7, lng: 4.8 },
       ],
     })
@@ -98,7 +122,7 @@ describe('toNewsItem', () => {
     const item = toNewsItem({
       ...article,
       locations_mentioned: [
-        { country: 'FR', lat: 48.8, lng: 2.3 },
+        { name: 'Headline', country: 'FR', lat: 48.8, lng: 2.3 },
         { country: 'US', lat: 40.7, lng: -74 },
       ],
     })
@@ -109,7 +133,7 @@ describe('toNewsItem', () => {
     const item = toNewsItem({
       ...article,
       source: { domain: 'example.com', location: { country_code: 'us', country_name: 'United States' } },
-      locations_mentioned: [{ country: 'FR', lat: 48.8, lng: 2.3 }],
+      locations_mentioned: [{ name: 'Headline', country: 'FR', lat: 48.8, lng: 2.3 }],
     })
     assert.equal(item?.sourceCountryCode, 'US')
     assert.deepEqual(item?.countryCodes, ['FR'])

@@ -12,6 +12,7 @@ import {
 
 const APITUBE_ORIGIN = 'https://api.apitube.io'
 const ARTICLE_LANGUAGE = 'en'
+const OPENING_LENGTH = 500
 
 export type NewsTopic = {
   medtopId: string
@@ -112,7 +113,7 @@ export function toNewsItem(value: unknown): NewsItem | null {
   if (!name) {
     return null
   }
-  const point = coordinates(value)
+  const point = coordinates(value, openingText(article))
   if (!point) {
     return null
   }
@@ -173,10 +174,21 @@ function hostname(href: string): string | null {
   return new URL(href).hostname
 }
 
-function coordinates(value: unknown): { latitude: number; longitude: number } | null {
+function openingText(article: { title: string; description: string | null; body: string | null }): string {
+  // A place named only in the site menu is not the story.
+  const description = article.description?.slice(0, OPENING_LENGTH) ?? ''
+  const body = article.body?.slice(0, OPENING_LENGTH) ?? ''
+  return `${article.title}\n${description}\n${body}`.toLowerCase()
+}
+
+function coordinates(value: unknown, opening: string): { latitude: number; longitude: number } | null {
   for (const place of unknownItems.parse(recordField(value, 'locations_mentioned'))) {
     const parsed = placePoint.safeParse(place)
     if (!parsed.success) {
+      continue
+    }
+    const name = nullableText.parse(isRecord(place) ? place.name : undefined)
+    if (!name || !opening.includes(name.toLowerCase())) {
       continue
     }
     return { latitude: parsed.data.lat, longitude: parsed.data.lng }
