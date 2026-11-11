@@ -25,3 +25,5 @@ pnpm test
 `pnpm dev` starts every app. The web app is at http://localhost:5173.
 
 Run one app with `pnpm --filter web dev`.
+
+https://github.com/yorkeccak/globalhackmap
